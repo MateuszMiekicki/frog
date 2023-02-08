@@ -14,4 +14,4 @@ async def login(request: Request, user: dto.User):
                         detail=f'User {user.email} exists')
     repo.add_user(user.email, user.password, 'user')
 
-    return {"sdf": "asd"}
+    return {"detail": "Registered"}

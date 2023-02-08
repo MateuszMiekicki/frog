@@ -24,7 +24,7 @@ def add_user(email: str, password: str, role: str):
     with get_db() as db:
         role_id = db.query(entity.Role.id).filter(
             entity.Role.role == role).scalar()
-        new_user = entity.User(email=email, password=password, role_id=2)
+        new_user = entity.User(email=email, password=password, role_id=role_id)
         db.add(new_user)
         db.commit()
 
