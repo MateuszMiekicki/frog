@@ -4,6 +4,7 @@ from typing import Optional
 from enum import Enum
 from contextlib import contextmanager
 from sqlalchemy.orm import sessionmaker
+from fastapi import APIRouter, status, Request, HTTPException, Security
 
 
 class Dialect(Enum):
@@ -33,10 +34,12 @@ class DatabaseAddress:
 
 
 class Database:
+    def __init__(self):
+        print("init")
     def __create_address(self, dialect: Dialect, driver: Driver,
                          address: DatabaseAddress, database: str,
                          auth: DatabaseAuth):
-        if driver != Driver.none:
+        if driver is not Driver.none:
             driver = f'+{driver.value}'
         else:
             driver = ''
@@ -46,7 +49,8 @@ class Database:
                 address: DatabaseAddress, database: str,
                 auth: DatabaseAuth):
         url = self.__create_address(dialect, driver, address, database, auth)
-        self.sessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=create_engine(url))
+        self.sessionLocal = sessionmaker(
+            expire_on_commit=False, autocommit=False, autoflush=False, bind=create_engine(url))
 
     @contextmanager
     def get_db(self):
@@ -58,4 +62,5 @@ class Database:
             db.rollback()
             raise
         finally:
+            db.expunge_all()
             db.close()

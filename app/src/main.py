@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from controller import register
+from controller import register, login
 from configure import database
 from security.authenticate import Authenticate
 from fastapi.security import HTTPBearer
@@ -13,6 +13,7 @@ import repository.user as repository
 
 app = FastAPI()
 app.include_router(register.router)
+app.include_router(login.router)
 
 
 @app.on_event("startup")
@@ -26,7 +27,7 @@ async def startup():
     db.connect(
         dialect, driver, address, database_name, auth)
     app.state.database = db
-    app.state.authenticate = Authenticate(app.state.database)
+    app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
 
     repo = repository.User(app.state.database)
@@ -40,4 +41,4 @@ async def startup():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
-    #,ssl_keyfile='private/key.pem', ssl_certfile='private/cert.pem')
+    # ,ssl_keyfile='private/key.pem', ssl_certfile='private/cert.pem')

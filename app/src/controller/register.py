@@ -1,17 +1,16 @@
-from fastapi import APIRouter, status, Request, HTTPException, Security
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from dto import user as dto
-router = APIRouter()
-security = HTTPBearer()
-import repository.user as repository
-
-
 from repository import user as repo
+import repository.user as repository
+from fastapi import APIRouter, status, Request, HTTPException
+from dto.user import User
+from security import hashing
+router = APIRouter()
+
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def login(request: Request, user: dto.User):
+async def login(request: Request, user: User):
     repo = repository.User(request.app.state.database)
     if repo.is_user_exist(user.email):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail=f'User {user.email} exists')
-    repo.add_user(user.email, user.password, 'user')
+    repo.add_user(email=user.email,
+                  password=hashing.hash(user.password.get_secret_value()), role='user')

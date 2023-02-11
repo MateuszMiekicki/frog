@@ -11,15 +11,6 @@ class Authenticate():
     # secret = os.getenv("APP_SECRET_STRING")
     secret = '1231231212312312312313'
 
-    def __init__(self, session: Session):
-        self.session = session
-
-    def authenticate(self, login: str, password: str):
-        user = self.session.query(entity.User).filter_by(login=login).first()
-        if user and bcrypt.checkpw(password.encode('utf8'), user.password.encode('utf8')):
-            return user
-        return None
-
     def encode_token(self, user):
         payload = {
             'exp': datetime.utcnow() + timedelta(days=0, minutes=30),
