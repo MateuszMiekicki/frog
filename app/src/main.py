@@ -17,13 +17,13 @@ app.include_router(login.router)
 app.include_router(device.router)
 
 
-@app.on_event("startup")
+@app.on_event('startup')
 async def startup():
-    auth = database.DatabaseAuth("frog", "frog!123")
-    address = database.DatabaseAddress("localhost", 5400)
+    auth = database.DatabaseAuth('frog', 'frog!123')
+    address = database.DatabaseAddress('localhost', 5400)
     dialect = database.Dialect.postgresql
     driver = database.Driver.none
-    database_name = "frog"
+    database_name = 'frog'
     db = database.Database()
     db.connect(
         dialect, driver, address, database_name, auth)
@@ -32,14 +32,14 @@ async def startup():
     app.state.security = HTTPBearer()
 
     repo = repository.User(app.state.database)
-    # if repo.is_user_exist("admin") is False:
-    #     pwhash = bcrypt.hashpw("admin".encode('utf8'), bcrypt.gensalt())
+    # if repo.is_user_exist('admin') is False:
+    #     pwhash = bcrypt.hashpw('admin'.encode('utf8'), bcrypt.gensalt())
     #     password = pwhash.decode('utf8')
-    #     user_entity = entity.User("admin", "admin", password, 1)
+    #     user_entity = entity.User('admin', 'admin', password, 1)
     #     repo.insert(user_entity)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host='0.0.0.0', port=8000, log_level='info')
     # ,ssl_keyfile='private/key.pem', ssl_certfile='private/cert.pem')

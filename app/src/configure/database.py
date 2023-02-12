@@ -8,7 +8,7 @@ from fastapi import APIRouter, status, Request, HTTPException, Security
 
 
 class Dialect(Enum):
-    postgresql = "postgresql"
+    postgresql = 'postgresql'
 
 
 class Driver(Enum):
@@ -21,7 +21,7 @@ class DatabaseAuth:
         self.password = password
 
     def get_auth(self):
-        return f"{self.username}:{self.password}"
+        return f'{self.username}:{self.password}'
 
 
 class DatabaseAddress:
@@ -30,7 +30,7 @@ class DatabaseAddress:
         self.port = port
 
     def get_address(self):
-        return f"{self.address}:{self.port}"
+        return f'{self.address}:{self.port}'
 
 
 class Database:
@@ -41,7 +41,7 @@ class Database:
             driver = f'+{driver.value}'
         else:
             driver = ''
-        return f"{dialect.value}{driver}://{auth.get_auth()}@{address.get_address()}/{database}"
+        return f'{dialect.value}{driver}://{auth.get_auth()}@{address.get_address()}/{database}'
 
     def connect(self, dialect: Dialect, driver: Driver,
                 address: DatabaseAddress, database: str,

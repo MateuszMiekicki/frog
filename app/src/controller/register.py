@@ -6,7 +6,7 @@ from security import hashing
 router = APIRouter()
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post('/register', status_code=status.HTTP_201_CREATED)
 async def login(request: Request, user: User):
     repo = repository.User(request.app.state.database)
     if repo.is_user_exist(user.email):

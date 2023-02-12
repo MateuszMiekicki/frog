@@ -20,7 +20,7 @@ class User():
     def get_user(self, email: str):
         with self.database.get_db() as db:
             return db.query(entity.User).filter(entity.User.email == email).first()
-        raise Exception("todo: error")
+        raise Exception('todo: error')
 
     def is_user_exist(self, email: str) -> bool:
         return self.get_user(email) is not None
