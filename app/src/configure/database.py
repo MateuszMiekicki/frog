@@ -34,8 +34,6 @@ class DatabaseAddress:
 
 
 class Database:
-    def __init__(self):
-        print("init")
     def __create_address(self, dialect: Dialect, driver: Driver,
                          address: DatabaseAddress, database: str,
                          auth: DatabaseAuth):
@@ -50,7 +48,7 @@ class Database:
                 auth: DatabaseAuth):
         url = self.__create_address(dialect, driver, address, database, auth)
         self.sessionLocal = sessionmaker(
-            expire_on_commit=False, autocommit=False, autoflush=False, bind=create_engine(url))
+            expire_on_commit=False, autocommit=False, autoflush=False, bind=create_engine(url, pool_pre_ping=True))
 
     @contextmanager
     def get_db(self):

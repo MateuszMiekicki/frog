@@ -1,10 +1,9 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+# from entity.device import Device
 
-Base = declarative_base()
-
-
+from entity.base import Base
 class Role(Base):
     __tablename__ = 'role'
 
@@ -22,5 +21,6 @@ class User(Base):
     role = relationship("Role", back_populates="users")
 
 
-
 Role.users = relationship("User", order_by=User.id, back_populates="role")
+# User.devices = relationship(
+#     "Device", order_by=Device.id, back_populates="device")

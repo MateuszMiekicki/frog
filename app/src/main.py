@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from controller import register, login
+from controller import register, login, device
 from configure import database
 from security.authenticate import Authenticate
 from fastapi.security import HTTPBearer
@@ -14,6 +14,7 @@ import repository.user as repository
 app = FastAPI()
 app.include_router(register.router)
 app.include_router(login.router)
+app.include_router(device.router)
 
 
 @app.on_event("startup")
