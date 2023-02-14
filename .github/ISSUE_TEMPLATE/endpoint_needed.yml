@@ -14,12 +14,12 @@ body:
     attributes:
       label: What do you expect?
       description: Describe exactly what you expect and in what form.
-      value: "Endpoint needed"
       placeholder: |
         Example of description
         As a user, I expect that after sending a POST to example.com/register
         with the registration data, I will receive a message whether the action
         was successful or not together with the reason for the error.
+      value: "Endpoint needed"
     validations:
       required: true
   - type: textarea
