@@ -1,0 +1,56 @@
+name: Endpoint needed
+description: Template for endpoint demand reporting
+title: "[Endpoint] "
+labels: ["enhancement"]
+assignees:
+  - mateuszmiekicki
+body:
+  - type: markdown
+    attributes:
+      # value: |
+      #   Thanks for taking the time to fill out this bug report!
+  # - type: input
+  #   id: contact
+  #   attributes:
+  #     label: Contact Details
+  #     description: How can we get in touch with you if we need more info?
+  #     placeholder: ex. email@example.com
+  #   validations:
+  #     required: false
+  - type: markdown
+    id: new-endpoint-description
+    attributes:
+      label: What do you expect?
+      description: Describe exactly what you expect and in what form.
+      placeholder: Example of description |
+      Jako użytkownik oczekuję, że po wysłaniu POST na adres example.com/register
+      z danymi do rejestracji otrzymam komunikat czy czynność się udała lub nie razem z powodem błędu.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-input
+    attributes:
+      label: Expected input
+      description: What you want to send as a URL or as a body.
+      placeholder: Example of description |
+      \{
+        "login": "test@test.test",
+        "password": "asdvxq342fdasada"
+      \}
+  - type: textarea
+    id: expected-output
+    attributes:
+      label: Expected output
+      description: What you want to receive after processing the request.
+      placeholder: Example of description |
+      "http code: 200 ok"
+      "detail: register success"
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: What kind of connection do you expect?
+      options:
+        - https
+        - websocket
+    validations:
+      required: true
