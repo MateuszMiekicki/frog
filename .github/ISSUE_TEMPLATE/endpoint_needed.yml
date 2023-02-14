@@ -8,17 +8,36 @@ body:
   - type: markdown
     attributes:
       value: >
-        Thanks for taking the time to fill out this bug report!
+        Thanks for taking the time to fill out this feature report!
   - type: textarea
     id: new-endpoint-description
     attributes:
-      label: What do you expect?
+      label: What will be the purpose of the endpoint? What task is it expected to perform in the system?
       description: Describe exactly what you expect and in what form.
       placeholder: >
-        Example of description
         As a user, I expect that after sending a POST to example.com/register
         with the registration data, I will receive a message whether the action
         was successful or not together with the reason for the error.
+    validations:
+      required: true
+  - type: textarea
+    id: endpoint-option
+    attributes:
+      label: What parameter options will be available for endpoint?
+      description: Options for sorting, filtering, pagination, etc.
+      placeholder: >
+        As a user, I expect that after sending a POST to example.com/register
+        with the registration data, I will receive a message whether the action
+        was successful or not together with the reason for the error.
+    validations:
+      required: true
+  - type: textarea
+    id: endpoint-auth
+    attributes:
+      label: Jakie będą wymagane uprawnienia dostępu do endpointu?
+      description: Authentication and  Authorization
+      placeholder: >
+        Endpoint should only be accessible to logged-in users.
     validations:
       required: true
   - type: textarea
@@ -27,20 +46,25 @@ body:
       label: Expected input
       description: What you want to send as a URL or as a body.
       placeholder: >
-        Example of description
-        \{
+        {
           "login": "test@test.test",
           "password": "asdvxq342fdasada"
-        \}
+        }
+  - type: textarea
+    id: expected-exception
+    attributes:
+      label: What will be the exceptions that the endpoint will need to handle? What information should be returned when an exception occurs?
+      description: What are the edge cases?
+      placeholder: >
+        Case - Given a negative value - behaviour - return all.
   - type: textarea
     id: expected-output
     attributes:
       label: Expected output
       description: What you want to receive after processing the request.
       placeholder: >
-        Example of description
-        "http code: 200 ok"
-        "detail: register success"
+        http code: 200 ok
+        detail: register success
   - type: dropdown
     id: protocol
     attributes:
