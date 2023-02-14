@@ -30,13 +30,29 @@ body:
         GET example.com/device
         Returned value
         yaml:
-        device:
-          id: 1
-            sensor_number: 3
-            description: device in main room
-          id: 2
-            sensor_number: 1
-            description: device in garden
+          device:
+            id: 1
+              sensor_number: 3
+              description: device in main room
+            id: 2
+              sensor_number: 1
+              description: device in garden
+
+        GET example.com/device/42
+        Returned value
+        yaml:
+          device:
+            id: 42
+              sensor_number: 3
+              description: device in main room
+
+        !!!Only for logged user!!!
+        POST example.com/device/42
+        Send body value
+        yaml:
+          device:
+            key: asda123feartq34gera
+            name: device in main room
     validations:
       required: true
   - type: textarea
