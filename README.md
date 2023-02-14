@@ -1,13 +1,13 @@
 # frog
-One of the two server-side components required to retrieve data from the database. 
+One of the two server-side components required to retrieve data from the database.
 frog exposes several endpoints to facilitate connecting to the database and handling basic CRUD-level tasks.
-In addition, it implements authorisation and user authentication using JWTs and roles. 
+In addition, it implements authorisation and user authentication using JWTs and roles.
 
 ## Run Locally
 1. download the infrastructure configuration repo and follow the instructions therein
 https://github.com/MateuszMiekicki/pond.git
-2. installing the necessary packages to run the project
-3. `python3 app/src/main.py`
+2. installing the necessary packages to run the project: `pip install -r requirements.txt`
+3. run application: `python app/src/main.py`
 
 ## Related
 - [infrastructure](https://github.com/MateuszMiekicki/pond)
