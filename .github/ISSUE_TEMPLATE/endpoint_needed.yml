@@ -26,9 +26,17 @@ body:
       label: What parameter options will be available for endpoint?
       description: Options for sorting, filtering, pagination, etc.
       placeholder: >
-        As a user, I expect that after sending a POST to example.com/register
-        with the registration data, I will receive a message whether the action
-        was successful or not together with the reason for the error.
+        Opcja - opis opcji, jakie wejśćie i jakie wyjście
+        GET example.com/device
+        Zwrócona wartość
+        yaml:
+        device:
+          id: 1
+            sensor_number: 3
+            description: device in main room
+          id: 2
+            sensor_number: 1
+            description: device in garden
     validations:
       required: true
   - type: textarea
