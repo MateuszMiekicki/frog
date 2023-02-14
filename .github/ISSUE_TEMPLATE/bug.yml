@@ -1,0 +1,54 @@
+name: Bug Report
+description: Create a bug report
+labels:
+  - 'kind: bug'
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: summary
+    attributes:
+      label: Description
+      description: >
+        Please provide an abstract description of the issue to the developers,
+        and why you consider it to be a bug. Please include any specific links
+        to the documentation, JSON specification, or code.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: >
+        How do you trigger the bug? Please walk us through step by step. Be as
+        specific as possible.
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Expected vs. actual results
+      description: >
+        Please describe what you expected to happen after the steps above and
+        what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Minimal code example
+      description: >
+        If possible, provide a small and self-contained example that triggers
+        the bug. Please understand that we cannot analyze and debug large code
+        bases. Please do not paste screenshots here.
+      render: Shell
+  - type: textarea
+    id: output
+    attributes:
+      label: Error messages
+      description: >
+        Please provide any kind of error output (compilation errors, exception
+        messages, stack traces, etc.) which can help to diagnose the error.
+      render: Shell
