@@ -26,9 +26,9 @@ body:
       label: What parameter options will be available for endpoint?
       description: Options for sorting, filtering, pagination, etc.
       placeholder: >
-        Opcja - opis opcji, jakie wejśćie i jakie wyjście
+        Option - description of the option, what input and what output
         GET example.com/device
-        Zwrócona wartość
+        Returned value
         yaml:
         device:
           id: 1
