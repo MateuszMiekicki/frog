@@ -6,27 +6,15 @@ assignees:
   - mateuszmiekicki
 body:
   - type: markdown
-    attributes:
-      # value: |
-      #   Thanks for taking the time to fill out this bug report!
-  # - type: input
-  #   id: contact
-  #   attributes:
-  #     label: Contact Details
-  #     description: How can we get in touch with you if we need more info?
-  #     placeholder: ex. email@example.com
-  #   validations:
-  #     required: false
-  - type: markdown
     id: new-endpoint-description
     attributes:
       label: What do you expect?
       description: Describe exactly what you expect and in what form.
       placeholder: |
-      Example of description
-      As a user, I expect that after sending a POST to example.com/register
-      with the registration data, I will receive a message whether the action
-      was successful or not together with the reason for the error.
+        Example of description
+        As a user, I expect that after sending a POST to example.com/register
+        with the registration data, I will receive a message whether the action
+        was successful or not together with the reason for the error.
     validations:
       required: true
   - type: textarea
@@ -35,20 +23,20 @@ body:
       label: Expected input
       description: What you want to send as a URL or as a body.
       placeholder: |
-      Example of description
-      \{
-        "login": "test@test.test",
-        "password": "asdvxq342fdasada"
-      \}
+        Example of description
+        \{
+          "login": "test@test.test",
+          "password": "asdvxq342fdasada"
+        \}
   - type: textarea
     id: expected-output
     attributes:
       label: Expected output
       description: What you want to receive after processing the request.
       placeholder: |
-      Example of description
-      "http code: 200 ok"
-      "detail: register success"
+        Example of description
+        "http code: 200 ok"
+        "detail: register success"
   - type: dropdown
     id: protocol
     attributes:
