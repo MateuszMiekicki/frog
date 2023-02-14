@@ -14,6 +14,7 @@ body:
     attributes:
       label: What do you expect?
       description: Describe exactly what you expect and in what form.
+      value: "Endpoint needed"
       placeholder: |
         Example of description
         As a user, I expect that after sending a POST to example.com/register
