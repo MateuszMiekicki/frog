@@ -6,6 +6,10 @@ assignees:
   - mateuszmiekicki
 body:
   - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: markdown
     id: new-endpoint-description
     attributes:
       label: What do you expect?
