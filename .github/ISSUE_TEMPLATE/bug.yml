@@ -1,7 +1,10 @@
-name: Bug Report
+name: Bug report
 description: Create a bug report
+title: "[Bug] "
+assignees:
+  - mateuszmiekicki
 labels:
-  - 'kind: bug'
+  - 'bug'
 body:
   - type: markdown
     attributes:
