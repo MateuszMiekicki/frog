@@ -58,7 +58,7 @@ body:
   - type: textarea
     id: endpoint-auth
     attributes:
-      label: Jakie będą wymagane uprawnienia dostępu do endpointu?
+      label: What endpoint access rights will be required?
       description: Authentication and  Authorization
       placeholder: >
         Endpoint should only be accessible to logged-in users.
