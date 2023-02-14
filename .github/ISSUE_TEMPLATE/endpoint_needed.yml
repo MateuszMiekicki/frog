@@ -22,9 +22,11 @@ body:
     attributes:
       label: What do you expect?
       description: Describe exactly what you expect and in what form.
-      placeholder: Example of description |
-      Jako użytkownik oczekuję, że po wysłaniu POST na adres example.com/register
-      z danymi do rejestracji otrzymam komunikat czy czynność się udała lub nie razem z powodem błędu.
+      placeholder: |
+      Example of description
+      As a user, I expect that after sending a POST to example.com/register
+      with the registration data, I will receive a message whether the action
+      was successful or not together with the reason for the error.
     validations:
       required: true
   - type: textarea
@@ -32,7 +34,8 @@ body:
     attributes:
       label: Expected input
       description: What you want to send as a URL or as a body.
-      placeholder: Example of description |
+      placeholder: |
+      Example of description
       \{
         "login": "test@test.test",
         "password": "asdvxq342fdasada"
@@ -42,7 +45,8 @@ body:
     attributes:
       label: Expected output
       description: What you want to receive after processing the request.
-      placeholder: Example of description |
+      placeholder: |
+      Example of description
       "http code: 200 ok"
       "detail: register success"
   - type: dropdown
