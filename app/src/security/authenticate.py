@@ -1,5 +1,4 @@
 import jwt
-import bcrypt
 import entity.user as entity
 from sqlalchemy.orm import Session
 import os
