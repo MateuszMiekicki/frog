@@ -26,13 +26,13 @@ async def startup():
     driver = database.Driver.none
     database_name = 'frog'
     db = database.Database()
-    db.connect(
-        dialect, driver, address, database_name, auth)
+    db.connect(dialect, driver, address, database_name, auth)
     app.state.database = db
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
 
     repo = repository.User(app.state.database)
+
 
 if __name__ == '__main__':
     import uvicorn
