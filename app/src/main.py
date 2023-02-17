@@ -33,12 +33,6 @@ async def startup():
     app.state.security = HTTPBearer()
 
     repo = repository.User(app.state.database)
-    # if repo.is_user_exist('admin') is False:
-    #     pwhash = bcrypt.hashpw('admin'.encode('utf8'), bcrypt.gensalt())
-    #     password = pwhash.decode('utf8')
-    #     user_entity = entity.User('admin', 'admin', password, 1)
-    #     repo.insert(user_entity)
-
 
 if __name__ == '__main__':
     import uvicorn
