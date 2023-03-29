@@ -14,4 +14,4 @@ async def login(request: Request, user: User):
                             detail=f'User {user.email} exists')
     repo.add_user(email=user.email,
                   password=hashing.hash(user.password.get_secret_value()), role='user')
-    return {'detail': 'user created'}
+    return {'detail': 'user created'}
