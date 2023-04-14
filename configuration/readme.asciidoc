@@ -1,0 +1,15 @@
+=== Examples
+
+Here are some examples of configurations that use environment variables
+and what each configuration looks like after replacement:
+
+[options="header"]
+|==================================
+|Config source	         |Environment setting   |Config after replacement
+|`name: ${NAME}`         |`export NAME=terrarium` |`name: terrarium`
+|`name: ${NAME}`         |no setting            |`name:`
+|`name: ${NAME:beats}`   |no setting            |`name: beats`
+|`name: ${NAME:beats}`   |`export NAME=terrarium` |`name: terrarium`
+|`name: ${NAME:?You need to set the NAME environment variable}`  |no setting            | None. Returns an error message that's prepended with the custom text.
+|`name: ${NAME:?You need to set the NAME environment variable}`  |`export NAME=terrarium` | `name: terrarium`
+|==================================

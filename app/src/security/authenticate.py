@@ -13,7 +13,7 @@ class Authenticate():
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
     def __init__(self):
-        print(self.SECRET_KEY)
+        pass
 
     def encode_token(self, user):
         payload = {

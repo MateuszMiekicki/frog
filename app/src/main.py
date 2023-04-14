@@ -1,11 +1,6 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-
-from controller import register, login, device
-from configure import database
+from configuration import logger, database, configuration
+from controller import register, login, device, data
 from security.authenticate import Authenticate
 from fastapi.security import HTTPBearer
 import repository.user as repository
@@ -15,12 +10,13 @@ app = FastAPI()
 app.include_router(register.router)
 app.include_router(login.router)
 app.include_router(device.router)
+app.include_router(data.router)
 
 
 @app.on_event('startup')
 async def startup():
     auth = database.DatabaseAuth('frog', 'frog!123')
-    address = database.DatabaseAddress('postgresql', 5432)
+    address = database.DatabaseAddress('127.0.0.1', 5433)
     dialect = database.Dialect.postgresql
     driver = database.Driver.none
     database_name = 'frog'
@@ -34,6 +30,10 @@ async def startup():
 
 
 if __name__ == '__main__':
+    frog_config = configuration.FrogConfiguration(
+        configuration.read_config_from_file('configuration/private/template/frog.properties'))
+    logger.set_log_level(frog_config.get_log_level())
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=8000, log_level='info')
+    uvicorn.run(app, host=frog_config.get_hostname(), port=frog_config.get_port(),
+                log_level='info', log_config=None)
     # ,ssl_keyfile='private/key.pem', ssl_certfile='private/cert.pem')

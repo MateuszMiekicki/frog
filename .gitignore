@@ -193,3 +193,8 @@ poetry.toml
 
 private/*
 !private/.gitkeep
+
+
+configuration/private/*
+!configuration/private/.gitkeep
+!configuration/private/template

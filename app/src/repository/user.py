@@ -1,6 +1,6 @@
 from entity import user as entity
 from sqlalchemy.orm import Session
-from configure.database import Database
+from configuration.database import Database
 
 
 class User():
