@@ -8,6 +8,7 @@ router = APIRouter()
 @router.post('/login', status_code=status.HTTP_200_OK)
 async def login(request: Request, user: User):
     repo = repository.User(request.app.state.database)
+    user.email = user.email.lower()
     user_from_db = repo.get_user(user.email)
     if user_from_db and hashing.verify(user_from_db.password, user.password.get_secret_value()):
         access_token = request.app.state.authenticate.encode_token(

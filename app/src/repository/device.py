@@ -5,7 +5,6 @@ from configuration.database import Database
 
 class Device():
     def __init__(self, database: Database):
-
         self.database = database
 
     def add_device(self, user_id: int, name: str, key: str):

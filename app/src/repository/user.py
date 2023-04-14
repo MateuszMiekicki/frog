@@ -5,7 +5,6 @@ from configuration.database import Database
 
 class User():
     def __init__(self, database: Database):
-
         self.database = database
 
     def add_user(self, email: str, password: str, role: str):
