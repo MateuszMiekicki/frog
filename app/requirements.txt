@@ -8,4 +8,4 @@ pyOpenSSL~=23.0
 SQLAlchemy~=2.0
 uvicorn~=0.20
 psycopg2-binary~=2.9
-yaml==6
+pyyaml==6
