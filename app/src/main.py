@@ -16,7 +16,7 @@ app.include_router(data.router)
 @app.on_event('startup')
 async def startup():
     auth = database.DatabaseAuth('frog', 'frog!123')
-    address = database.DatabaseAddress('127.0.0.1', 5433)
+    address = database.DatabaseAddress('postgresql', 5433)
     dialect = database.Dialect.postgresql
     driver = database.Driver.none
     database_name = 'frog'
