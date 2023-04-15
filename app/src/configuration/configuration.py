@@ -56,8 +56,6 @@ class Configuration():
         self.configuration_parser = configuration_parser
         self.config = yaml.safe_load(config)
 
-# create enum for log_level
-
 
 class LogLevel(Enum):
     DEBUG = 'DEBUG'
@@ -69,11 +67,11 @@ class LogLevel(Enum):
 
 
 class FrogConfiguration(Configuration):
-    ROOT_KEY = 'frog'
+    __ROOT_KEY = 'frog'
 
     def __init__(self, config: str, configuration_parser: ConfigurationParser = ConfigurationParser()):
         super().__init__(config, configuration_parser)
-        self.config = super().get_key_from_config(self.ROOT_KEY)
+        self.config = super().get_key_from_config(self.__ROOT_KEY)
 
     def get_port(self):
         port = self.configuration_parser.parse(
@@ -92,3 +90,40 @@ class FrogConfiguration(Configuration):
             logging.info("No login level set, default set (INFO)")
             pass
         return LogLevel(log_level.upper())
+
+
+class DatabaseConfiguration(Configuration):
+    __ROOT_KEY = 'databases'
+
+    def __init__(self, config: str, configuration_parser: ConfigurationParser = ConfigurationParser()):
+        super().__init__(config, configuration_parser)
+        self.config = super().get_key_from_config(self.__ROOT_KEY)
+
+    def get_port(self):
+        port = self.configuration_parser.parse(
+            str(super().get_key_from_config('port')))
+        return int(port) if port else None
+
+    def get_hostname(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('hostname')))
+
+    def get_database_name(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('database_name')))
+
+    def get_user_name(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('user_name')))
+
+    def get_password(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('password')))
+
+
+class PostgreSQLConfiguration(DatabaseConfiguration):
+    __ROOT_KEY = 'postgresql'
+
+    def __init__(self, config: str, configuration_parser: ConfigurationParser = ConfigurationParser()):
+        super().__init__(config, configuration_parser)
+        self.config = super().get_key_from_config(self.__ROOT_KEY)

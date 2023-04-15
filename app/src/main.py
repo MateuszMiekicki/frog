@@ -15,13 +15,17 @@ app.include_router(data.router)
 
 @app.on_event('startup')
 async def startup():
-    auth = database.DatabaseAuth('frog', 'frog!123')
-    address = database.DatabaseAddress('postgresql', 5433)
+    postgresql_config = configuration.PostgreSQLConfiguration(
+        configuration.read_config_from_file('configuration/private/template/databases.properties'))
+    auth = database.DatabaseAuth(
+        postgresql_config.get_user_name(), postgresql_config.get_password())
+    address = database.DatabaseAddress(
+        postgresql_config.get_hostname(), postgresql_config.get_port())
     dialect = database.Dialect.postgresql
     driver = database.Driver.none
-    database_name = 'frog'
     db = database.Database()
-    db.connect(dialect, driver, address, database_name, auth)
+    db.connect(dialect, driver, address,
+               postgresql_config.get_database_name(), auth)
     app.state.database = db
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
