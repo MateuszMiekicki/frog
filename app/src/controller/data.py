@@ -12,7 +12,7 @@ router = APIRouter()
 
 conn = psycopg2.connect(database="qdb",
                         host="localhost",
-                        user="frog",
+                        user="frogReadOnly",
                         password="frog!123",
                         port="8812")
 
