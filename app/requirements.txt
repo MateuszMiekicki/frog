@@ -9,3 +9,4 @@ SQLAlchemy~=2.0
 uvicorn~=0.20
 psycopg2-binary~=2.9
 pyyaml==6
+psycopg[c,pool]==3
