@@ -1,0 +1,2 @@
+questdb~=1
+websockets~=11
