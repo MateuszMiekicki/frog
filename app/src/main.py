@@ -6,19 +6,18 @@ from fastapi.security import HTTPBearer
 import repository.user as repository
 import sys
 import argparse
+import psycopg2
 
 app = FastAPI()
 app.include_router(register.router)
 app.include_router(login.router)
 app.include_router(device.router)
 app.include_router(data.router)
-# make dict with configuration files for frog and databases
 configuration_files = {'frog': 'configuration/private/template/frog.properties',
                        'databases': 'configuration/private/template/databases.properties'}
 
 
-@app.on_event('startup')
-async def startup():
+def create_postgresql_instance():
     postgresql_config = configuration.PostgreSQLConfiguration(
         configuration.read_config_from_file(configuration_files['databases']))
     auth = database.DatabaseAuth(
@@ -30,11 +29,28 @@ async def startup():
     db = database.Database()
     db.connect(dialect, driver, address,
                postgresql_config.get_database_name(), auth)
-    app.state.database = db
+    return db
+
+
+def create_questdb_instance():
+    questdb_config = configuration.QuestDBConfiguration(
+        configuration.read_config_from_file(configuration_files['databases']))
+    conn = psycopg2.connect(database=questdb_config.get_database_name(),
+                            host=questdb_config.get_hostname(),
+                            user=questdb_config.get_user_name(),
+                            password=questdb_config.get_password(),
+                            port=questdb_config.get_port())
+    return conn
+
+
+@app.on_event('startup')
+async def startup():
+    app.state.postgresql = create_postgresql_instance()
+    app.state.questdb = create_questdb_instance()
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
 
-    repo = repository.User(app.state.database)
+    repo = repository.User(app.state.postgresql)
 
 
 def parse_args():

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, status, Request, HTTPException, Depends, WebSocket
+import traceback
+from fastapi import APIRouter, status, Request, HTTPException, Depends, WebSocket, WebSocketDisconnect
+import websockets
 import asyncio
 from fastapi import FastAPI
 import psycopg as pg
@@ -6,15 +8,8 @@ import time
 import psycopg2
 import json
 from datetime import datetime
-from configuration import logger
+import logging
 router = APIRouter()
-
-
-conn = psycopg2.connect(database="qdb",
-                        host="localhost",
-                        user="frogReadOnly",
-                        password="frog!123",
-                        port="8812")
 
 
 def prepare_message_for_client(rows):
@@ -45,14 +40,14 @@ def prepare_message_for_client(rows):
 
 def prepare_query(devices_id=None):
     data_for_specific_device_id = "WHERE device_id IN ({})".format(
-        ', '.join(devices_id)) if devices_id is not None and len(devices_id) > 0 else ""
+        ''.join(map(str, devices_id))) if devices_id is not None and len(devices_id) > 0 else ""
     query = "SELECT * FROM sensor_data {} ORDER BY timestamp DESC".format(
         data_for_specific_device_id)
     return query
 
 
-async def get_data(devices_id=None):
-    cursor = conn.cursor()
+async def get_data(database, devices_id=None):
+    cursor = database.cursor()
     cursor.execute(prepare_query(devices_id))
     rows = cursor.fetchmany(size=50)
     return json.dumps(prepare_message_for_client(rows))
@@ -62,32 +57,42 @@ class Parameters():
     devices = None
 
 
-async def handle_message(message: str, parameters: Parameters):
+def handle_message(message: str, parameters: Parameters):
     message = json.loads(message)
     if message["devices"] is not None:
         parameters.devices = message["devices"]
         logging.debug("Devices: {}".format(parameters.devices))
 
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@router.websocket("/data")
+async def data_sensors(websocket: WebSocket):
     await websocket.accept()
+    conn = websocket.app.state.questdb
     parameters = Parameters()
 
     async def listen_for_messages():
         while True:
-            message = await websocket.receive_text()
-            if message:
-                await handle_message(message, parameters)
+            try:
+                message = await websocket.receive_text()
+                if message:
+                    handle_message(message, parameters)
+            except websockets.exceptions.ConnectionClosed:
+                break
+            except Exception as e:
+                logging.error(f"Error receive data: {str(e)}")
+                break
 
     asyncio.create_task(listen_for_messages())
-
     while True:
         start_time = time.time()
-
-        data = await get_data(parameters.devices)
-        await websocket.send_json(data)
-
+        data = await get_data(conn, parameters.devices)
+        try:
+            await websocket.send_json(data)
+        except websockets.exceptions.ConnectionClosed:
+            break
+        except Exception as e:
+            logging.error(f"Error sending data: {str(e)}")
+            break
         end_time = time.time()
         elapsed_time = end_time - start_time
         delay = 1 - elapsed_time

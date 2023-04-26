@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.post('/register', status_code=status.HTTP_201_CREATED)
 async def login(request: Request, user: User):
-    repo = repository.User(request.app.state.database)
+    repo = repository.User(request.app.state.postgresql)
     user.email = user.email.lower()
     if repo.is_user_exist(user.email.lower()):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,

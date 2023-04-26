@@ -127,3 +127,11 @@ class PostgreSQLConfiguration(DatabaseConfiguration):
     def __init__(self, config: str, configuration_parser: ConfigurationParser = ConfigurationParser()):
         super().__init__(config, configuration_parser)
         self.config = super().get_key_from_config(self.__ROOT_KEY)
+
+
+class QuestDBConfiguration(DatabaseConfiguration):
+    __ROOT_KEY = 'questdb'
+
+    def __init__(self, config: str, configuration_parser: ConfigurationParser = ConfigurationParser()):
+        super().__init__(config, configuration_parser)
+        self.config = super().get_key_from_config(self.__ROOT_KEY)
