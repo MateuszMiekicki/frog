@@ -3,7 +3,6 @@ from fastapi import APIRouter, status, Request, HTTPException, Depends, WebSocke
 import websockets
 import asyncio
 from fastapi import FastAPI
-import psycopg as pg
 import time
 import psycopg2
 import json
