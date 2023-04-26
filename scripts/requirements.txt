@@ -1,2 +1,2 @@
-questdb~=1
-websockets~=11
+questdb~=1.1
+websockets~=11.0
