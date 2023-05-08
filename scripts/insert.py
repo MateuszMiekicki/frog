@@ -5,7 +5,7 @@ import random
 import time
 
 
-def example(host: str = 'localhost', port: int = 9009):
+def example(host: str = 'questdb', port: int = 9009):
     try:
         with Sender(host, port) as sender:
             for i in range(1, 1000):
