@@ -86,7 +86,7 @@ async def data_sensors(websocket: WebSocket):
         start_time = time.time()
         data = await get_data(conn, parameters.devices)
         try:
-            await websocket.send_json(data)
+            await websocket.send_text(data)
         except websockets.exceptions.ConnectionClosed:
             break
         except Exception as e:
