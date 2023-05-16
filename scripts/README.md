@@ -3,6 +3,6 @@
 ## Insert
 Data generation for testing connection by websocket
 ```
-pip install -r scripts/requirements.txt
+pip install -r requirements.txt
 python insert.py
 ```
