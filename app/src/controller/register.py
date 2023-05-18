@@ -14,5 +14,5 @@ async def login(request: Request, user: User):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail=f'User {user.email} exists')
     repo.add_user(email=user.email,
-                  password=hashing.hash(user.password.get_secret_value()), role='user')
+                  password=hashing.hash(user.password.get_secret_value()), role='owner')
     return {'detail': 'user created'}
