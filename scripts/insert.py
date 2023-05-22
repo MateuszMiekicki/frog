@@ -5,7 +5,7 @@ import random
 import time
 
 
-def example(host: str = 'questdb', port: int = 9009):
+def insert(host: str = 'questdb', port: int = 9009):
     try:
         with Sender(host, port) as sender:
             for i in range(1, 1000):
@@ -27,4 +27,4 @@ def example(host: str = 'questdb', port: int = 9009):
 
 
 if __name__ == '__main__':
-    example()
+    insert()
