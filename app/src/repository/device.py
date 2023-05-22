@@ -27,3 +27,9 @@ class Device():
         with self.database.get_db() as db:
             return db.query(entity.Device).filter(entity.Device.user_id == user_id).all()
         raise Exception('todo: error')
+
+    def delete_device(self, device_id: int):
+        with self.database.get_db() as db:
+            db.query(entity.Device).filter(
+                entity.Device.id == device_id).delete()
+            db.commit()

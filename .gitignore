@@ -198,3 +198,4 @@ private/*
 configuration/private/*
 !configuration/private/.gitkeep
 !configuration/private/template
+app/src/messages/*

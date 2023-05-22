@@ -21,7 +21,6 @@ class Authenticate():
             'iat': datetime.utcnow(),
             'scope': 'access_token',
             'sub': user.id,
-            'role': user.role_id
         }
         return jwt.encode(
             payload,
