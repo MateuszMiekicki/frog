@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import repository.device as repository
 from controller.dto.device import Device
 # from messages import MCUConfigReq_pb2
-import zmq
+# import zmq
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
