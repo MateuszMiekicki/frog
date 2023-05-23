@@ -3,7 +3,7 @@ from fastapi import APIRouter, status, Request, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import repository.device as repository
 from controller.dto.device import Device
-from messages import MCUConfigReq_pb2
+# from messages import MCUConfigReq_pb2
 import zmq
 
 router = APIRouter()
