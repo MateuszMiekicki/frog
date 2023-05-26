@@ -8,7 +8,12 @@ import psycopg2
 import json
 from datetime import datetime
 import logging
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from security.authenticate import Authenticate
+from fastapi import APIRouter, status, Request, HTTPException, Depends
+import repository.device as repository
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 
 def prepare_message_for_client(rows):
@@ -39,7 +44,7 @@ def prepare_message_for_client(rows):
 
 def prepare_query(devices_id=None):
     data_for_specific_device_id = "WHERE device_id IN ({})".format(
-        ''.join(map(str, devices_id))) if devices_id is not None and len(devices_id) > 0 else ""
+        ','.join(map(str, devices_id))) if devices_id is not None and len(devices_id) > 0 else ""
     query = "SELECT * FROM sensor_data {} ORDER BY timestamp DESC".format(
         data_for_specific_device_id)
     return query
@@ -58,14 +63,45 @@ class Parameters():
 
 def handle_message(message: str, parameters: Parameters):
     message = json.loads(message)
+    if len(message["devices"]) == 0:
+        parameters.devices = None
+        return
     if message["devices"] is not None:
         parameters.devices = message["devices"]
         logging.debug("Devices: {}".format(parameters.devices))
 
 
-@router.websocket("/data")
+async def authenticate_websocket(websocket: WebSocket):
+    token = None
+    if "token" in websocket.headers:
+        token = websocket.headers["token"]
+    authenticate = Authenticate()
+    try:
+        decoded_token = authenticate.decode_token(token)
+    except Exception as e:
+        logging.error(f"Error decode token: {str(e)}")
+        await websocket.close(code=1008)
+        return None
+    if not decoded_token:
+        await websocket.close(code=1008)
+        return None
+    return decoded_token.get("sub")
+
+
+def get_devices_id_from_devices_list(devices):
+    devices_id = []
+    for device in devices:
+        devices_id.append(device.id)
+    return devices_id
+
+
+@router.websocket("/device/sensor/data")
 async def data_sensors(websocket: WebSocket):
     await websocket.accept()
+    user_id = await authenticate_websocket(websocket)
+    if user_id is None:
+        logging.info("User not authenticated")
+        return
     conn = websocket.app.state.questdb
     parameters = Parameters()
 
@@ -82,8 +118,15 @@ async def data_sensors(websocket: WebSocket):
                 break
 
     asyncio.create_task(listen_for_messages())
+    repo = repository.Device(websocket.app.state.postgresql)
     while True:
         start_time = time.time()
+        if parameters.devices is None:
+            parameters.devices = repo.get_devices(user_id)
+            parameters.devices = get_devices_id_from_devices_list(
+                parameters.devices)
+            logging.debug("User devices with id {}: {}".format(
+                user_id, parameters.devices))
         data = await get_data(conn, parameters.devices)
         try:
             await websocket.send_text(data)

@@ -50,8 +50,6 @@ async def startup():
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
 
-    repo = repository.User(app.state.postgresql)
-
 
 def parse_args():
     parser = argparse.ArgumentParser()

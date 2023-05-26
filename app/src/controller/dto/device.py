@@ -3,9 +3,11 @@ from pydantic.typing import Optional
 
 
 class Device(BaseModel):
-    name: Optional[str] = None
+    name: str
     key: str = Field(min_length=27, max_length=128)
 
 
 class Sensor(BaseModel):
-    name: Optional[str] = None
+    device_id: int = Field(min=1)
+    name: str
+

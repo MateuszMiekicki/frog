@@ -18,7 +18,7 @@ async def read_users_me(request: Request, device: Device, token: str = Depends(o
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail=f'The device with the key {device.key} is already in the database.')
     repo.add_device(decoded_token.get('sub'), device.name, device.key)
-    return {'detail': 'device created'}
+    return {'detail': f'device with key {device.key} added'}
 
 
 @router.get('/devices', status_code=status.HTTP_200_OK)
