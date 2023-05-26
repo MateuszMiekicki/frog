@@ -10,3 +10,8 @@ class Sensor(Base):
     device_id = Column(Integer, ForeignKey('device.id'), nullable=False)
     pin = Column(Integer, nullable=False, unique=True)
     name = Column(String)
+    type = Column(String)
+    min_value = Column(Integer)
+    max_value = Column(Integer)
+
+    device = relationship('Device', back_populates='sensors')
