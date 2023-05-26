@@ -58,6 +58,7 @@ async def get_data(database, devices_id=None):
 
 
 class Parameters():
+    verified = False
     devices = None
 
 
@@ -67,6 +68,7 @@ def handle_message(message: str, parameters: Parameters):
         parameters.devices = None
         return
     if message["devices"] is not None:
+        parameters.verified = False
         parameters.devices = message["devices"]
         logging.debug("Devices: {}".format(parameters.devices))
 
@@ -93,6 +95,13 @@ def get_devices_id_from_devices_list(devices):
     for device in devices:
         devices_id.append(device.id)
     return devices_id
+
+
+def verify_devices_id(parameters, devices_from_database):
+    devices_id_from_database = get_devices_id_from_devices_list(
+        devices_from_database)
+    parameters.verified = True
+    return list(set(parameters.devices) & set(devices_id_from_database))
 
 
 @router.websocket("/device/sensor/data")
@@ -125,6 +134,11 @@ async def data_sensors(websocket: WebSocket):
             parameters.devices = repo.get_devices(user_id)
             parameters.devices = get_devices_id_from_devices_list(
                 parameters.devices)
+            logging.debug("User devices with id {}: {}".format(
+                user_id, parameters.devices))
+        elif not parameters.verified:
+            parameters.devices = verify_devices_id(
+                parameters, repo.get_devices(user_id))
             logging.debug("User devices with id {}: {}".format(
                 user_id, parameters.devices))
         data = await get_data(conn, parameters.devices)
