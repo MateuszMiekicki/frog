@@ -1,10 +1,8 @@
-# from security import hashing
 from fastapi import APIRouter, status, Request, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import repository.device as repository
 from controller.dto.device import Device
-# from messages import MCUConfigReq_pb2
-# import zmq
+
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -23,7 +21,7 @@ def prepare_key_to_add_to_database(key):
 
 
 @router.post('/device', status_code=status.HTTP_201_CREATED)
-async def read_users_me(request: Request, device: Device, token: str = Depends(oauth2_scheme)):
+async def add_device(request: Request, device: Device, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
     repo = repository.Device(request.app.state.postgresql)
     if repo.get_device_by_key(device.key):
@@ -35,7 +33,7 @@ async def read_users_me(request: Request, device: Device, token: str = Depends(o
 
 
 @router.get('/devices', status_code=status.HTTP_200_OK)
-async def read_users_me(request: Request, token: str = Depends(oauth2_scheme)):
+async def get_devices(request: Request, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
     repo = repository.Device(request.app.state.postgresql)
     return repo.get_devices(decoded_token.get('sub'))
@@ -53,31 +51,4 @@ def delete_device(request: Request, device_id: int, token: str = Depends(oauth2_
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=f'The device with the id {device_id} is not owned by you.')
     repo.delete_device(device_id)
-
-
-# @router.get('/device/configuration/{device_id}', status_code=status.HTTP_201_CREATED)
-# async def read_users_me(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
-#     decode_token = request.app.state.authenticate.decode_token(token)
-#     repo = repository.Device(request.app.state.postgresql)
-
-#     device = repo.get_device_by_id(device_id)
-#     if device is None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                             detail=f'The device with the id {device_id} was not found.')
-#     request = MCUConfigReq_pb2.MCUConfigReq()
-#     request.key = device.key
-#     request = request.SerializeToString()
-#     context = zmq.Context()
-#     socket = context.socket(zmq.DEALER)
-#     socket.connect("tcp://localhost:5555")
-#     socket.send(request)
-#     response = socket.recv()
-#     socket.close()
-#     return response
-
-
-# @router.get('/device/{sensor_id}', status_code=status.HTTP_200_OK)
-# async def read_users_me(request: Request, token: str = Depends(oauth2_scheme)):
-#     decode_token = request.app.state.authenticate.decode_token(token)
-#     repo = repository.Device(request.app.state.postgresql )
-#     return repo.get_devices(decode_token.get('sub'))
+    return {'detail': f'device with id {device_id} deleted'}
