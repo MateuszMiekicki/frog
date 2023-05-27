@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import repository.sensor as sensor_repository
 import repository.device as device_repository
 from controller.dto.sensor import Sensor
+from controller.facade import device_checker
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -10,17 +11,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 @router.post('/device/sensor', status_code=status.HTTP_201_CREATED)
 async def read_users_me(request: Request, sensor: Sensor, token: str = Depends(oauth2_scheme)):
-    request.app.state.authenticate.decode_token(token)
+    user_id = request.app.state.authenticate.decode_token(token).get('sub')
+
     repo = device_repository.Device(request.app.state.postgresql)
     device = repo.get_device_by_id(sensor.device_id)
-    if device is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'The device with the id {sensor.device_id} was not found.')
-    if device.user_id != request.app.state.authenticate.decode_token(token).get('sub'):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail=f'The device with the id {sensor.device_id} is not owned by you.')
+    device_checker.is_device_exists(device, sensor.device_id)
+    device_checker.is_device_owned_by_user(device, user_id)
+
     repo = sensor_repository.Sensor(request.app.state.postgresql)
+    if repo.get_sensor_assigned_to_device_pin(sensor.device_id, sensor.pin) is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f'The pin {sensor.pin} is already associated with device id {sensor.device_id}.')
     repo.add_sensor(sensor.device_id, sensor.name, sensor.pin,
                     sensor.type, sensor.min_value, sensor.max_value)
-
     return {'detail': 'sensor is associated with a device'}

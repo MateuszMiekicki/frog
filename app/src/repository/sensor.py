@@ -14,6 +14,11 @@ class Sensor():
             db.add(new_sensor)
             db.commit()
 
+    def get_sensor_assigned_to_device_pin(self, device_id: int, pin: int):
+        with self.database.get_db() as db:
+            return db.query(entity.Sensor).filter(entity.Sensor.device_id == device_id,
+                                                  entity.Sensor.pin == pin).first()
+
     # def get_device_by_id(self, device_id: int):
     #     with self.database.get_db() as db:
     #         return db.query(entity.Device).filter(entity.Device.id == device_id).first()
