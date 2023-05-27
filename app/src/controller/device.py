@@ -10,6 +10,18 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 
+def __trim_key(key):
+    return key.replace(' ', '')
+
+
+def __cast_to_lower_case(key):
+    return key.lower()
+
+
+def prepare_key_to_add_to_database(key):
+    return __cast_to_lower_case(__trim_key(key))
+
+
 @router.post('/device', status_code=status.HTTP_201_CREATED)
 async def read_users_me(request: Request, device: Device, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
@@ -17,7 +29,8 @@ async def read_users_me(request: Request, device: Device, token: str = Depends(o
     if repo.get_device_by_key(device.key):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail=f'The device with the key {device.key} is already in the database.')
-    repo.add_device(decoded_token.get('sub'), device.name, device.key)
+    repo.add_device(decoded_token.get('sub'), device.name,
+                    prepare_key_to_add_to_database(device.key))
     return {'detail': f'device with key {device.key} added'}
 
 

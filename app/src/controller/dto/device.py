@@ -3,4 +3,4 @@ from pydantic import BaseModel, Field
 
 class Device(BaseModel):
     name: str
-    key: str = Field(min_length=27, max_length=128)
+    key: str = Field(max_length=17)
