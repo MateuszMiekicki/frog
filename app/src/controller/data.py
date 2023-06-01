@@ -50,10 +50,13 @@ def prepare_query(devices_id=None):
     return query
 
 
+class NoDeviceIdException(Exception):
+    pass
+
+
 async def get_data(database, devices_id):
     if devices_id is None or len(devices_id) == 0:
-        logging.warn("No devices id")
-        return json.dumps({})
+        raise NoDeviceIdException("No devices id")
     cursor = database.cursor()
     cursor.execute(prepare_query(devices_id))
     rows = cursor.fetchmany(size=50)
@@ -83,11 +86,11 @@ async def authenticate_websocket(websocket: WebSocket):
     authenticate = Authenticate()
     try:
         decoded_token = authenticate.decode_token(token)
+    except HTTPException:
+        await websocket.close(code=4001, reason="User not authorization")
+        return None
     except Exception as e:
         logging.error(f"Error decode token: {str(e)}")
-        await websocket.close(code=1008)
-        return None
-    if not decoded_token:
         await websocket.close(code=1008)
         return None
     return decoded_token.get("sub")
@@ -112,7 +115,6 @@ async def data_sensors(websocket: WebSocket):
     await websocket.accept()
     user_id = await authenticate_websocket(websocket)
     if user_id is None:
-        logging.info("User not authenticated")
         return
     conn = websocket.app.state.questdb
     parameters = Parameters()
@@ -144,13 +146,16 @@ async def data_sensors(websocket: WebSocket):
                 parameters, repo.get_devices(user_id))
             logging.debug("User devices with id {}: {}".format(
                 user_id, parameters.devices))
-        data = await get_data(conn, parameters.devices)
         try:
+            data = await get_data(conn, parameters.devices)
             await websocket.send_text(data)
         except websockets.exceptions.ConnectionClosed:
             break
+        except NoDeviceIdException:
+            await websocket.close(code=4004, reason=f"user {user_id} has no devices")
+            break
         except Exception as e:
-            logging.error(f"Error sending data: {str(e)}")
+            logging.error(f"Error: {str(e)}")
             break
         end_time = time.time()
         elapsed_time = end_time - start_time
