@@ -50,7 +50,10 @@ def prepare_query(devices_id=None):
     return query
 
 
-async def get_data(database, devices_id=None):
+async def get_data(database, devices_id):
+    if devices_id is None or len(devices_id) == 0:
+        logging.warn("No devices id")
+        return json.dumps({})
     cursor = database.cursor()
     cursor.execute(prepare_query(devices_id))
     rows = cursor.fetchmany(size=50)
