@@ -9,28 +9,47 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 
-@router.post('/device/sensor', status_code=status.HTTP_201_CREATED)
-async def read_users_me(request: Request, sensor: Sensor, token: str = Depends(oauth2_scheme)):
+@router.post('/device/{device_id}/sensor', status_code=status.HTTP_201_CREATED)
+async def add_sensor(request: Request, device_id: int, sensor: Sensor, token: str = Depends(oauth2_scheme)):
     user_id = request.app.state.authenticate.decode_token(token).get('sub')
 
     repo = device_repository.Device(request.app.state.postgresql)
-    devices = repo.get_devices(user_id)
-    if len(devices) == 0:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f'There are no devices associated with user id {user_id}.')
-    if len(devices) > 1 and sensor.device_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f'There are more than one device associated with user id {user_id}. Please specify the device id.')
-    if len(devices) == 1:
-        sensor.device_id = devices[0].id
-    device = repo.get_device_by_id(sensor.device_id)
-    device_checker.is_device_exists(device, sensor.device_id)
+    device = repo.get_device_by_id(device_id)
+    device_checker.is_device_exists(device, device_id)
     device_checker.is_device_owned_by_user(device, user_id)
 
     repo = sensor_repository.Sensor(request.app.state.postgresql)
-    if repo.get_sensor_assigned_to_device_pin(sensor.device_id, sensor.pin) is not None:
+    if repo.get_sensor_assigned_to_device_pin_number(device_id, sensor.pin_number) is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f'The pin {sensor.pin} is already associated with device id {sensor.device_id}.')
-    repo.add_sensor(sensor.device_id, sensor.name, sensor.pin,
+                            detail=f'The pin {sensor.pin_number} is already associated with device id {device_id}.')
+    repo.add_sensor(device_id, sensor.name, sensor.pin_number,
                     sensor.type, sensor.min_value, sensor.max_value)
     return {'detail': 'sensor is associated with a device'}
+
+
+# @router.post('/device/sensor', status_code=status.HTTP_201_CREATED)
+# async def get_sensor(request: Request, sensor: Sensor, token: str = Depends(oauth2_scheme)):
+#     user_id = request.app.state.authenticate.decode_token(token).get('sub')
+
+#     repo = device_repository.Device(request.app.state.postgresql)
+#     devices = repo.get_devices(user_id)
+#     if len(devices) == 0:
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+#                             detail=f'There are no devices associated with user id {user_id}.')
+#     if len(devices) > 1 and sensor.device_id is None:
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+#                             detail=f'There are more than one device associated with user id {user_id}. Please specify the device id.')
+#     if len(devices) == 1:
+#         sensor.device_id = devices[0].id
+
+#     device = repo.get_device_by_id(sensor.device_id)
+#     device_checker.is_device_exists(device, sensor.device_id)
+#     device_checker.is_device_owned_by_user(device, user_id)
+
+#     repo = sensor_repository.Sensor(request.app.state.postgresql)
+#     if repo.get_sensor_assigned_to_device_pin_number(sensor.device_id, sensor.pin_number) is not None:
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+#                             detail=f'The pin {sensor.pin_number} is already associated with device id {sensor.device_id}.')
+#     repo.add_sensor(sensor.device_id, sensor.name, sensor.pin_number,
+#                     sensor.type, sensor.min_value, sensor.max_value)
+#     return {'detail': 'sensor is associated with a device'}

@@ -8,7 +8,7 @@ class Sensor(Base):
 
     id = Column(Integer, primary_key=True)
     device_id = Column(Integer, ForeignKey('device.id'), nullable=False)
-    pin = Column(Integer, nullable=False, unique=True)
+    pin_number = Column(Integer, nullable=False, unique=True)
     name = Column(String)
     type = Column(String)
     min_value = Column(Integer)

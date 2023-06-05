@@ -8,8 +8,7 @@ def add_user(database, user):
     if database.is_user_exist(user.email):
         return False
     database.add_user(email=user.email,
-                      password=hashing.hash(user.password.get_secret_value()),
-                      role='owner')
+                      password=hashing.hash(user.password.get_secret_value()))
     return True
 
 

@@ -8,14 +8,10 @@ class User():
     def __init__(self, database: Database):
         self.database = database
 
-    def __get_id_by_role(self, role: str) -> int:
-        with self.database.get_db() as db:
-            return db.query(entity.Role.id).filter(entity.Role.role == role).scalar()
-
-    def add_user(self, email: str, password: str, role: str):
+    def add_user(self, email: str, password: str):
         with self.database.get_db() as db:
             new_user = entity.User(
-                email=email, password=password, role_id=self.__get_id_by_role(role))
+                email=email, password=password)
             db.add(new_user)
             db.commit()
 

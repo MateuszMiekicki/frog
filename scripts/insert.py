@@ -5,7 +5,7 @@ import random
 import time
 
 
-def insert(host: str = 'questdb', port: int = 9009):
+def insert(host: str = 'localhost', port: int = 9009):
     try:
         with Sender(host, port) as sender:
             for i in range(1, 1000):
@@ -15,8 +15,8 @@ def insert(host: str = 'questdb', port: int = 9009):
                 sender.row(
                     'sensor_data',
                     columns={
-                        'device_id': 2 if i % 2 == 0 else 1,
-                        'sensor_id': random.randint(1, 8),
+                        'mac_address': "macasdasas" if i % 2 == 0 else "macacsdasas",
+                        'pin_number': random.randint(1, 8),
                         'value': 28.0 - random.uniform(-8, 10)
                     }, at=timestamp
                 )

@@ -20,33 +20,34 @@ def prepare_message_for_client(rows):
     result = {}
     previous_values = {}
     for item in rows:
-        timestamp, sensor_id, value1, value2 = item
+        timestamp, mac_address, pin_number, value = item
         timestamp_str = timestamp.isoformat()
-        if str(sensor_id) not in result:
-            result[str(sensor_id)] = {}
-        if str(value1) not in result[str(sensor_id)]:
-            result[str(sensor_id)][str(value1)] = {
+        if str(mac_address) not in result:
+            result[str(mac_address)] = {}
+        if str(pin_number) not in result[str(mac_address)]:
+            result[str(mac_address)][str(pin_number)] = {
                 "timestamp": timestamp_str,
-                "value": value2
+                "value": value
             }
         else:
             previous_timestamp_str = result[str(
-                sensor_id)][str(value1)]["timestamp"]
+                mac_address)][str(pin_number)]["timestamp"]
             previous_timestamp = datetime.fromisoformat(previous_timestamp_str)
             if timestamp > previous_timestamp:
-                result[str(sensor_id)][str(value1)] = {
+                result[str(mac_address)][str(pin_number)] = {
                     "timestamp": timestamp_str,
-                    "value": value2
+                    "value": value
                 }
-                previous_values[(sensor_id, value1)] = value2
+                previous_values[(mac_address, pin_number)] = value
     return result
 
 
-def prepare_query(devices_id=None):
-    data_for_specific_device_id = "WHERE device_id IN ({})".format(
-        ','.join(map(str, devices_id))) if devices_id is not None and len(devices_id) > 0 else ""
+def prepare_query(devices):
+    mac_addresses = ["'"+str(device.mac_address)+"'" for device in devices]
+    data_for_specific_devices = "WHERE mac_address IN ({})".format(
+        ','.join(mac_addresses))
     query = "SELECT * FROM sensor_data {} ORDER BY timestamp DESC".format(
-        data_for_specific_device_id)
+        data_for_specific_devices)
     return query
 
 
@@ -54,40 +55,45 @@ class NoDeviceIdException(Exception):
     pass
 
 
-async def get_data(database, devices_id):
-    if devices_id is None or len(devices_id) == 0:
-        raise NoDeviceIdException("No devices id")
+async def get_data(database, devices):
     cursor = database.cursor()
-    cursor.execute(prepare_query(devices_id))
+    cursor.execute(prepare_query(devices))
     rows = cursor.fetchmany(size=50)
     return json.dumps(prepare_message_for_client(rows))
 
 
 class Parameters():
-    verified = False
     devices = None
 
 
 def handle_message(message: str, parameters: Parameters):
     message = json.loads(message)
+    print(message)
     if len(message["devices"]) == 0:
         parameters.devices = None
         return
     if message["devices"] is not None:
-        parameters.verified = False
         parameters.devices = message["devices"]
         logging.debug("Devices: {}".format(parameters.devices))
 
 
 async def authenticate_websocket(websocket: WebSocket):
     token = None
-    if "token" in websocket.headers:
-        token = websocket.headers["token"]
+    try:
+        message = await websocket.receive_text()
+        message = json.loads(message)
+        if message and 'token' in message:
+            token = message["token"]
+    except websockets.exceptions.ConnectionClosed:
+        return None
+    except Exception as e:
+        logging.error(f"Error receive data: {str(e)}")
+        return None
     authenticate = Authenticate()
     try:
         decoded_token = authenticate.decode_token(token)
     except HTTPException:
-        await websocket.close(code=4001, reason="User not authorization")
+        await websocket.close(code=4401, reason="User not authorization")
         return None
     except Exception as e:
         logging.error(f"Error decode token: {str(e)}")
@@ -96,18 +102,25 @@ async def authenticate_websocket(websocket: WebSocket):
     return decoded_token.get("sub")
 
 
-def get_devices_id_from_devices_list(devices):
-    devices_id = []
-    for device in devices:
-        devices_id.append(device.id)
-    return devices_id
+def intersection_sets_of_devices(set_with_device_id, set_with_device):
+    verified_devices_id = list(
+        set(set_with_device_id) & set([device.id for device in set_with_device]))
+    verified_devices = []
+    for device in set_with_device:
+        if device.id in verified_devices_id:
+            verified_devices.append(device)
+    return verified_devices
 
 
-def verify_devices_id(parameters, devices_from_database):
-    devices_id_from_database = get_devices_id_from_devices_list(
-        devices_from_database)
-    parameters.verified = True
-    return list(set(parameters.devices) & set(devices_id_from_database))
+def preprocessing_parameters_with_device_id(devices_from_client, devices_from_database):
+    if devices_from_client is None and len(devices_from_database) != 0:
+        return devices_from_database
+    if len(devices_from_client) == 0:
+        return None
+
+    verified_devices = intersection_sets_of_devices(
+        devices_from_client, devices_from_database)
+    return verified_devices
 
 
 @router.websocket("/device/sensor/data")
@@ -135,24 +148,15 @@ async def data_sensors(websocket: WebSocket):
     repo = repository.Device(websocket.app.state.postgresql)
     while True:
         start_time = time.time()
-        if parameters.devices is None:
-            parameters.devices = repo.get_devices(user_id)
-            parameters.devices = get_devices_id_from_devices_list(
-                parameters.devices)
-            logging.debug("User devices with id {}: {}".format(
-                user_id, parameters.devices))
-        elif not parameters.verified:
-            parameters.devices = verify_devices_id(
-                parameters, repo.get_devices(user_id))
-            logging.debug("User devices with id {}: {}".format(
-                user_id, parameters.devices))
+        devices = preprocessing_parameters_with_device_id(
+            parameters.devices, repo.get_devices_by_user_id(user_id))
+        if devices is None or len(devices) == 0:
+            await websocket.close(code=4406, reason="The user does not have a device")
+            return
         try:
-            data = await get_data(conn, parameters.devices)
+            data = await get_data(conn, devices)
             await websocket.send_text(data)
         except websockets.exceptions.ConnectionClosed:
-            break
-        except NoDeviceIdException:
-            await websocket.close(code=4004, reason=f"user {user_id} has no devices")
             break
         except Exception as e:
             logging.error(f"Error: {str(e)}")
