@@ -166,3 +166,33 @@ async def data_sensors(websocket: WebSocket):
         delay = 1 - elapsed_time
         if delay > 0:
             await asyncio.sleep(delay)
+
+
+@router.websocket("/device/{device_id}/sensor/data")
+async def data_sensors(websocket: WebSocket, device_id: int):
+    await websocket.accept()
+    user_id = await authenticate_websocket(websocket)
+    if user_id is None:
+        return
+    conn = websocket.app.state.questdb
+    repo = repository.Device(websocket.app.state.postgresql)
+    devices = preprocessing_parameters_with_device_id(
+        [device_id], repo.get_devices_by_user_id(user_id))
+    if devices is None or len(devices) == 0:
+        await websocket.close(code=4406, reason="The user does not have a device")
+        return
+    while True:
+        start_time = time.time()
+        try:
+            data = await get_data(conn, devices)
+            await websocket.send_text(data)
+        except websockets.exceptions.ConnectionClosed:
+            break
+        except Exception as e:
+            logging.error(f"Error: {str(e)}")
+            break
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        delay = 1 - elapsed_time
+        if delay > 0:
+            await asyncio.sleep(delay)
