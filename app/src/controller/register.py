@@ -5,6 +5,7 @@ import repository.user as user_repo
 import repository.user_confirmation as user_confirmation_repo
 import security.hashing as hashing
 import base64
+import logging
 router = APIRouter()
 
 
