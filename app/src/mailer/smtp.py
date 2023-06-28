@@ -11,6 +11,9 @@ class Smtp():
         self.user_name = user_name
         self.password = password
         self.server = smtplib.SMTP(host, port)
+        self.server.ehlo()
+        self.server.starttls()
+        self.server.login(self.user_name, self.password)
 
     def send_email(self, sender, recipient, subject, message):
         msg = MIMEText(message)
@@ -18,14 +21,11 @@ class Smtp():
         msg['Subject'] = subject
         msg['From'] = sender
         msg['To'] = recipient
-
         self.server.connect()
-        # self.server.starttls()
-        self.server.login(self.user_name, self.password)
         try:
             self.server.send_message(msg)
-        finally:
-            self.server.close()
+        except Exception as error:
+            logging.error(error)
 
     def send_noreply_email(self, recipient, subject, message):
         self.send_email("noreply@smart-terrarium.com",
