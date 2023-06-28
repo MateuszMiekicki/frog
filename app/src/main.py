@@ -88,6 +88,6 @@ if __name__ == '__main__':
         configuration.read_config_from_file(configuration_files['frog']))
     logger.set_log_level(frog_config.get_log_level())
     import uvicorn
-    uvicorn.run(app, host=frog_config.get_hostname(), port=frog_config.get_port(),
+    uvicorn.run(app, lifespan="on", host=frog_config.get_hostname(), port=frog_config.get_port(),
                 log_level='info', log_config=None)
     # ,ssl_keyfile='private/key.pem', ssl_certfile='private/cert.pem')
