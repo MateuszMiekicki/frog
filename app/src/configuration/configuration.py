@@ -135,3 +135,32 @@ class QuestDBConfiguration(DatabaseConfiguration):
     def __init__(self, config: str, configuration_parser: ConfigurationParser = ConfigurationParser()):
         super().__init__(config, configuration_parser)
         self.config = super().get_key_from_config(self.__ROOT_KEY)
+
+
+class MailerConfiguration(Configuration):
+    __ROOT_KEY = 'mailer'
+
+    def __init__(self, config: str, configuration_parser: ConfigurationParser = ConfigurationParser()):
+        super().__init__(config, configuration_parser)
+        self.config = super().get_key_from_config(self.__ROOT_KEY)
+
+    def get_user_name(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('user_name')))
+
+    def get_port(self):
+        port = self.configuration_parser.parse(
+            str(super().get_key_from_config('port')))
+        return int(port) if port else None
+
+    def get_hostname(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('hostname')))
+
+    def get_password(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('password')))
+
+    def is_ssl_enabled(self):
+        return self.configuration_parser.parse(
+            str(super().get_key_from_config('use_tls')))

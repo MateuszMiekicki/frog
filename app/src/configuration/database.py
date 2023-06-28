@@ -63,16 +63,16 @@ class Database:
         url = self.__create_address(dialect, driver, address, database, auth)
         engine = self.__create_engine(url)
         self.__check_connection(engine)
-        self.sessionLocal = self.__make_session(engine)
+        self.session_local = self.__make_session(engine)
 
     @contextmanager
     def get_db(self):
-        db = self.sessionLocal()
+        db = self.session_local()
         try:
             yield db
             db.commit()
         except Exception as error:
-            logging.error(error)
+            logging.error('Error during transaction: ', error)
             db.rollback()
             raise
         finally:

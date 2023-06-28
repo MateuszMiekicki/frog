@@ -7,6 +7,7 @@ import repository.user as repository
 import sys
 import argparse
 import psycopg2
+from mailer import smtp
 
 app = FastAPI()
 app.include_router(register.router)
@@ -16,7 +17,8 @@ app.include_router(data.router)
 app.include_router(sensor.router)
 app.include_router(device_configuration.router)
 configuration_files = {'frog': 'configuration/private/template/frog.properties',
-                       'databases': 'configuration/private/template/databases.properties'}
+                       'databases': 'configuration/private/template/databases.properties',
+                       'mailer': 'configuration/private/template/mailer.properties'}
 
 
 def create_postgresql_instance():
@@ -45,10 +47,20 @@ def create_questdb_instance():
     return conn
 
 
+def create_mailer_instance():
+    mailer_config = configuration.MailerConfiguration(
+        configuration.read_config_from_file(configuration_files['mailer']))
+    mailer = smtp.Smtp(mailer_config.get_hostname(), mailer_config.get_port(),
+                       mailer_config.get_user_name(), mailer_config.get_password()
+                       )
+    return mailer
+
+
 @app.on_event('startup')
 async def startup():
     app.state.postgresql = create_postgresql_instance()
     app.state.questdb = create_questdb_instance()
+    app.state.mailer = create_mailer_instance()
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
 
@@ -59,11 +71,15 @@ def parse_args():
                         help='path to frog configuration file')
     parser.add_argument('--databases_config', dest='databases_config',
                         help='path to databases configuration file')
+    parser.add_argument('--mailer_config', dest='mailer_config',
+                        help='path to mailer configuration file')
     args = parser.parse_args()
     if args.frog_config is not None:
         configuration_files['frog'] = args.frog_config
     if args.databases_config is not None:
         configuration_files['databases'] = args.databases_config
+    if args.mailer_config is not None:
+        configuration_files['mailer'] = args.mailer_config
 
 
 if __name__ == '__main__':

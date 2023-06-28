@@ -9,7 +9,8 @@ class Device():
 
     def add_device(self, user_id: int, name: str, mac_address: str):
         with self.database.get_db() as db:
-            new_device = entity.Device(user_id=user_id, name=name, mac_address=mac_address)
+            new_device = entity.Device(
+                user_id=user_id, name=name, mac_address=mac_address)
             db.add(new_device)
             db.commit()
 
