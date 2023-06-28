@@ -1,9 +1,13 @@
 import smtplib
 from email.mime.text import MIMEText
+import logging
 
 
 class Smtp():
     def __init__(self, host, port, user_name, password):
+        logging.info(
+            f"Initializing SMTP server. Host:  {host}, Port:{port}, User:{user_name}")
+
         self.user_name = user_name
         self.password = password
         self.server = smtplib.SMTP(host, port)
