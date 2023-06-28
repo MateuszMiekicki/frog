@@ -26,6 +26,3 @@ class Smtp():
     def send_noreply_email(self, recipient, subject, message):
         self.send_email("noreply@smart-terrarium.com",
                         recipient, subject, message)
-
-    def __del__(self):
-        self.server.quit()
