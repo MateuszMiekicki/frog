@@ -8,13 +8,11 @@ class Smtp():
         logging.info(
             f"Initializing SMTP server. Host: {host}, Port: {port}, User: {user_name}")
 
-        self.user_name = user_name
-        self.password = password
         self.server = smtplib.SMTP()
         self.server.connect(host, port)
         self.server.ehlo()
         self.server.starttls()
-        self.server.login(self.user_name, self.password)
+        self.server.login(user_name, password)
 
     def send_email(self, sender, recipient, subject, message):
         msg = MIMEText(message)
