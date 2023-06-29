@@ -10,7 +10,8 @@ class Smtp():
 
         self.user_name = user_name
         self.password = password
-        self.server = smtplib.SMTP(host, port)
+        self.server = smtplib.SMTP()
+        self.server.connect(host, port)
         self.server.ehlo()
         self.server.starttls()
         self.server.login(self.user_name, self.password)
@@ -21,9 +22,10 @@ class Smtp():
         msg['Subject'] = subject
         msg['From'] = sender
         msg['To'] = recipient
-        self.server.connect()
         try:
             self.server.send_message(msg)
+        except Exception as e:
+            logging.error(f"Error sending email: {e}")
         finally:
             self.server.quit()
 
