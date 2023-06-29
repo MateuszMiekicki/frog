@@ -24,8 +24,8 @@ class Smtp():
         self.server.connect()
         try:
             self.server.send_message(msg)
-        except Exception as error:
-            logging.error(error)
+        finally:
+            self.server.quit()
 
     def send_noreply_email(self, recipient, subject, message):
         self.send_email("noreply@smart-terrarium.com",
