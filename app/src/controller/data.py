@@ -68,7 +68,6 @@ class Parameters():
 
 def handle_message(message: str, parameters: Parameters):
     message = json.loads(message)
-    print(message)
     if len(message["devices"]) == 0:
         parameters.devices = None
         return

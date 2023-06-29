@@ -33,18 +33,14 @@ class Smtp():
         msg['Subject'] = subject
         msg['From'] = sender
         msg['To'] = recipient
-        self.__connect()
         if not self.__is_connected():
-            self.server.connect()
-            self.server.ehlo()
-            self.server.starttls()
-            self.server.login(sender, password)
+            self.__connect()
+            logging.info("Reconnecting to SMTP server")
+
         try:
             self.server.send_message(msg)
         except Exception as e:
             logging.error(f"Error sending email: {e}")
-        finally:
-            self.server.quit()
 
     def send_noreply_email(self, recipient, subject, message):
         self.send_email("noreply@smart-terrarium.com",

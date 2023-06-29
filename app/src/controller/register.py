@@ -40,7 +40,6 @@ async def login(request: Request, user: User):
             database)
         user_confirmation_repository.add_user_confirmation_code(
             added_user.id, confirmation_code)
-        print(confirmation_code)
         return {'detail': 'user created'}
     raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                         detail=f'User {user.email} exists')
