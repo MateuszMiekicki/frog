@@ -8,7 +8,7 @@ class Smtp():
         logging.info(
             f"Initializing SMTP server. Host: {host}, Port: {port}, User: {user_name}")
 
-        self.server = smtplib.SMTP()
+        self.server = smtplib.SMTP(host, port)
         self.server.connect(host, port)
         self.server.ehlo()
         self.server.starttls()
