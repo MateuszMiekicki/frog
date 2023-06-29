@@ -51,8 +51,7 @@ def create_mailer_instance():
     mailer_config = configuration.MailerConfiguration(
         configuration.read_config_from_file(configuration_files['mailer']))
     mailer = smtp.Smtp(mailer_config.get_hostname(), mailer_config.get_port(),
-                       mailer_config.get_user_name(), mailer_config.get_password()
-                       )
+                       mailer_config.get_user_name(), mailer_config.get_password())
     return mailer
 
 

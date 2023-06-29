@@ -24,8 +24,6 @@ def __send_confirmation_code(mailer, user_email):
                                   'Confirm registration', confirmation_code)
     except Exception as error:
         logging.error(error)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f'Error while sending confirmation code to {user_email}')
     return confirmation_code
 
 
