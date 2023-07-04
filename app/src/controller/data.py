@@ -172,6 +172,7 @@ async def data_sensors(websocket: WebSocket, device_id: int):
     await websocket.accept()
     user_id = await authenticate_websocket(websocket)
     if user_id is None:
+        logging.error("User not authorization")
         return
     conn = websocket.app.state.questdb
     repo = repository.Device(websocket.app.state.postgresql)
@@ -179,13 +180,18 @@ async def data_sensors(websocket: WebSocket, device_id: int):
         [device_id], repo.get_devices_by_user_id(user_id))
     if devices is None or len(devices) == 0:
         await websocket.close(code=4406, reason="The user does not have a device")
+        logging.error("The user does not have a device")
         return
     while True:
         start_time = time.time()
         try:
+            logging.debug("Get data")
             data = await get_data(conn, devices)
+            logging.debug("Send data")
             await websocket.send_text(data)
+            logging.debug("Data sent")
         except websockets.exceptions.ConnectionClosed:
+            logging.error("Connection closed")
             break
         except Exception as e:
             logging.error(f"Error: {str(e)}")
@@ -193,5 +199,6 @@ async def data_sensors(websocket: WebSocket, device_id: int):
         end_time = time.time()
         elapsed_time = end_time - start_time
         delay = 1 - elapsed_time
+        logging.debug("Delay: {}".format(delay))
         if delay > 0:
             await asyncio.sleep(delay)
