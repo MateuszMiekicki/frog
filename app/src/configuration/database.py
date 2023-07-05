@@ -55,6 +55,7 @@ class Database:
             raise
 
     def __make_session(self, engine):
+        self.engine = engine
         return sessionmaker(expire_on_commit=False, autocommit=False, autoflush=False, bind=engine)
 
     def connect(self, dialect: Dialect, driver: Driver,
@@ -67,6 +68,12 @@ class Database:
 
     @contextmanager
     def get_db(self):
+        try:
+            self.__check_connection(self.engine)
+        except Exception as error:
+            logging.info('Reconnecting to database')
+            self.session_local = self.__make_session(self.engine)
+
         db = self.session_local()
         try:
             yield db
