@@ -19,6 +19,9 @@ class Sensor():
             return db.query(entity.Sensor).filter(entity.Sensor.device_id == device_id,
                                                   entity.Sensor.pin_number == pin_number).first()
 
+    def get_sensors_assigned_to_device(self, device_id: int):
+        with self.database.get_db() as db:
+            return db.query(entity.Sensor).filter(entity.Sensor.device_id == device_id).all()
     # def get_device_by_id(self, device_id: int):
     #     with self.database.get_db() as db:
     #         return db.query(entity.Device).filter(entity.Device.id == device_id).first()

@@ -15,7 +15,7 @@ def add_user(database, user):
 def verify_user(database, user):
     database = repository.User(database)
     user_from_db = database.get_user(user.email)
-    if user_from_db.is_active:
+    if user_from_db is not None and user_from_db.is_active:
         if user_from_db and hashing.verify(user_from_db.password, user.password.get_secret_value()):
             return user_from_db
     return None

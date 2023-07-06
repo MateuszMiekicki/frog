@@ -1,9 +1,11 @@
 from fastapi import APIRouter, status, Request, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import repository.device as repository
+import repository.device as deviceRepository
+import repository.sensor as sensorRepository
 from controller.dto.device import Device
 import zmq
 import time
+import logging
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -47,10 +49,16 @@ def send_request(receiver_address: str, client_id: str, request: str):
         return "Connection timed out"
 
 
+def __prepare_information_about_devices_with_sensors(devices, sensors):
+    if sensors is None:
+        return {'id': devices.id, 'name': devices.name, 'mac_address': devices.mac_address, 'sensors': []}
+    return {'id': devices.id, 'name': devices.name, 'mac_address': devices.mac_address, 'sensors': [{'id': sensor.id, 'name': sensor.name, 'pin_number': sensor.pin_number, 'type': sensor.type, 'min_value': sensor.min_value, 'max_value': sensor.max_value} for sensor in sensors]}
+
+
 @router.post('/device', status_code=status.HTTP_201_CREATED)
 async def add_device(request: Request, device: Device, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
-    repo = repository.Device(request.app.state.postgresql)
+    repo = deviceRepository.Device(request.app.state.postgresql)
     if repo.get_device_by_mac_address(device.mac_address):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail=f'The device with the mac_address {device.mac_address} is already in the database.')
@@ -62,14 +70,33 @@ async def add_device(request: Request, device: Device, token: str = Depends(oaut
 @router.get('/devices', status_code=status.HTTP_200_OK)
 async def get_devices(request: Request, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
-    repo = repository.Device(request.app.state.postgresql)
+    repo = deviceRepository.Device(request.app.state.postgresql)
     return repo.get_devices_by_user_id(decoded_token.get('sub'))
+
+
+@router.get('/device/{device_id}', status_code=status.HTTP_200_OK)
+async def get_devices(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
+    decoded_token = request.app.state.authenticate.decode_token(token)
+    database = request.app.state.postgresql
+    repo = deviceRepository.Device(database)
+    device = repo.get_device_by_id(device_id)
+    logging.info(f"is exist device: {device is not None}")
+    if device is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'The device with the id {device_id} was not found.')
+    if device.user_id != decoded_token.get('sub'):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail=f'The device with the id {device_id} is not owned by you.')
+    logging.info(f"device: {device_id}")
+    sensors = sensorRepository.Sensor(
+        database).get_sensors_assigned_to_device(device_id)
+    return __prepare_information_about_devices_with_sensors(device, sensors)
 
 
 @router.delete('/device/{device_id}', status_code=status.HTTP_200_OK)
 def delete_device(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
-    repo = repository.Device(request.app.state.postgresql)
+    repo = deviceRepository.Device(request.app.state.postgresql)
     device = repo.get_device_by_id(device_id)
     if device is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -84,7 +111,7 @@ def delete_device(request: Request, device_id: int, token: str = Depends(oauth2_
 @router.get('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
 def get_device_configuration(request: Request, device_id: int):
     # decoded_token = request.app.state.authenticate.decode_token(token)
-    # repo = repository.Device(request.app.state.postgresql)
+    # repo = deviceRepository.Device(request.app.state.postgresql)
     # device = repo.get_device_by_id(device_id)
     # if device is None:
     #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
