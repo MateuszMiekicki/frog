@@ -58,7 +58,7 @@ async def delete_alert(request: Request, alert_id: int, token: str = Depends(oau
     return {'detail': f'alert with id {alert_id} deleted'}
 
 
-@router.get('/devices/alerts/', status_code=status.HTTP_200_OK)
+@router.get('/devices/alerts', status_code=status.HTTP_200_OK)
 async def get_alerts_with_parameters(request: Request,
                                      skip: int = 0,
                                      limit: int = 10,
