@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from configuration import logger, database, configuration
-from controller import register, login, device, data, sensor, device_configuration, alert
+from controller import register, login, device, data, sensor, alert
 from security.authenticate import Authenticate
 from fastapi.security import HTTPBearer
 import repository.user as repository
@@ -15,7 +15,6 @@ app.include_router(login.router)
 app.include_router(device.router)
 app.include_router(data.router)
 app.include_router(sensor.router)
-app.include_router(device_configuration.router)
 app.include_router(alert.router)
 configuration_files = {'frog': 'configuration/private/template/frog.properties',
                        'databases': 'configuration/private/template/databases.properties',
