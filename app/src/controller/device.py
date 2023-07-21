@@ -118,7 +118,7 @@ async def delete_device(request: Request, device_id: int, token: str = Depends(o
     return {'detail': f'device with id {device_id} deleted'}
 
 # todo: move to request state context
-zmq_config = ConfigForRequest("tcp://localhost:5571", 10000)
+zmq_config = ConfigForRequest("tcp://toad:5571", 10000)
 
 
 @router.get('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
