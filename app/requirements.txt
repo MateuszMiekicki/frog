@@ -8,6 +8,5 @@ pyOpenSSL~=23.0
 SQLAlchemy~=2.0
 uvicorn[standard]~=0.20
 psycopg2-binary~=2.9
-pyyaml
+pyyaml #todo: add concrete version
 pyzmq==25
-# protobuf~=4
