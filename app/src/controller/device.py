@@ -117,10 +117,18 @@ async def delete_device(request: Request, device_id: int, token: str = Depends(o
     repo.delete_device(device_id)
     return {'detail': f'device with id {device_id} deleted'}
 
+# todo: move to request state context
+zmq_config = ConfigForRequest("tcp://localhost:5571", 10000)
+
 
 @router.get('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
 async def get_device_configuration(request: Request, device_id: int):
-    zmq_config = ConfigForRequest("tcp://localhost:5571", 10000)
-    ret = await send_request("test", "config", zmq_config)
-    # return status code and detail message
+    ret = await send_request("test", "get_config", zmq_config)
+    raise HTTPException(status_code=ret[0], detail=ret[1])
+
+
+@router.post('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
+async def set_device_configuration(request: Request, device_id: int):
+    print(await request.json())
+    ret = await send_request("test", "set_config", zmq_config)
     raise HTTPException(status_code=ret[0], detail=ret[1])
