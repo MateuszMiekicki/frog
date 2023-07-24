@@ -10,7 +10,7 @@ import ecdsa
 class Authenticate():
     SECRET_KEY = ecdsa.SigningKey.generate(curve=ecdsa.NIST256p).to_pem()
     ALGORITHM = 'ES256'
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60*24
 
     def __init__(self):
         pass
