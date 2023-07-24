@@ -12,9 +12,6 @@ class Authenticate():
     ALGORITHM = 'ES256'
     ACCESS_TOKEN_EXPIRE_MINUTES = 60*24
 
-    def __init__(self):
-        pass
-
     def encode_token(self, user):
         payload = {
             'exp': datetime.utcnow() + timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES),
