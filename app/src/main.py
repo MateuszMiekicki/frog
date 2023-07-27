@@ -24,8 +24,8 @@ async def startup():
     app.state.mailer = configuration.create_mailer_instance()
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     app.state.zmq_context = zmq.asyncio.Context.instance()
 
 
