@@ -229,7 +229,7 @@ def main():
     alert_repository = AlertRepository(db_connection, device_matcher)
 
     alert_buffer = AlertBuffer(scheduler, alert_repository)
-    puller = Puller(alert_buffer, 'localhost', 5572)
+    puller = Puller(alert_buffer, 'toad', 5572)
     thread = threading.Thread(target=puller.run)
     thread.start()
 
