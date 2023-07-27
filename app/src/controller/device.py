@@ -118,7 +118,7 @@ zmq_config = ConfigForRequest("tcp://toad:5571", 5000)
 
 
 @router.get('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
-async def get_device_configuration(request: Request, device_id: int, , token: str = Depends(oauth2_scheme)):
+async def get_device_configuration(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
     decode_token = request.app.state.authenticate.decode_token(token)
     repo = deviceRepository.Device(request.app.state.postgresql)
     device = repo.get_device_by_id(device_id)
