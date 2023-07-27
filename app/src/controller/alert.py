@@ -5,6 +5,7 @@ import repository.device as deviceRepository
 import logging
 from controller.data import authenticate_websocket
 from fastapi import WebSocket
+import zmq
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 router = APIRouter()
