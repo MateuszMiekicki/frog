@@ -2,6 +2,10 @@ from enum import Enum
 import yaml
 import os
 import logging
+import argparse
+import psycopg2
+from configuration import logger, database
+from mailer import smtp
 
 
 class Environment():
@@ -164,3 +168,59 @@ class MailerConfiguration(Configuration):
     def is_ssl_enabled(self):
         return self.configuration_parser.parse(
             str(super().get_key_from_config('use_tls')))
+
+
+configuration_files = {'frog': 'configuration/private/template/frog.properties',
+                       'databases': 'configuration/private/template/databases.properties',
+                       'mailer': 'configuration/private/template/mailer.properties'}
+
+
+def create_postgresql_instance():
+    postgresql_config = PostgreSQLConfiguration(
+        read_config_from_file(configuration_files['databases']))
+    auth = database.DatabaseAuth(
+        postgresql_config.get_user_name(), postgresql_config.get_password())
+    address = database.DatabaseAddress(
+        postgresql_config.get_hostname(), postgresql_config.get_port())
+    dialect = database.Dialect.postgresql
+    driver = database.Driver.none
+    db = database.Database()
+    db.connect(dialect, driver, address,
+               postgresql_config.get_database_name(), auth)
+    return db
+
+
+def create_questdb_instance():
+    questdb_config = QuestDBConfiguration(
+        read_config_from_file(configuration_files['databases']))
+    conn = psycopg2.connect(database=questdb_config.get_database_name(),
+                            host=questdb_config.get_hostname(),
+                            user=questdb_config.get_user_name(),
+                            password=questdb_config.get_password(),
+                            port=questdb_config.get_port())
+    return conn
+
+
+def create_mailer_instance():
+    mailer_config = MailerConfiguration(
+        read_config_from_file(configuration_files['mailer']))
+    mailer = smtp.Smtp(mailer_config.get_hostname(), mailer_config.get_port(),
+                       mailer_config.get_user_name(), mailer_config.get_password())
+    return mailer
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--frog_config', dest='frog_config',
+                        help='path to frog configuration file')
+    parser.add_argument('--databases_config', dest='databases_config',
+                        help='path to databases configuration file')
+    parser.add_argument('--mailer_config', dest='mailer_config',
+                        help='path to mailer configuration file')
+    args = parser.parse_args()
+    if args.frog_config is not None:
+        configuration_files['frog'] = args.frog_config
+    if args.databases_config is not None:
+        configuration_files['databases'] = args.databases_config
+    if args.mailer_config is not None:
+        configuration_files['mailer'] = args.mailer_config

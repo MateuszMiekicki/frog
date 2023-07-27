@@ -3,6 +3,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import repository.alert as alertRepository
 import repository.device as deviceRepository
 import logging
+from controller.data import authenticate_websocket
+from fastapi import WebSocket
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 router = APIRouter()
@@ -87,3 +89,30 @@ async def get_alerts_with_parameters(request: Request,
         sort_by_date=sort_by_date,
         only_served=only_served,
         only_not_served=only_not_served)
+
+
+@router.websocket("/device/alert")
+async def device_alerts_notifier(websocket: WebSocket):
+    await websocket.accept()
+    user_id = await authenticate_websocket(websocket)
+    if user_id is None:
+        return
+
+    devices = deviceRepository.Device(
+        websocket.app.state.postgresql).get_devices_by_user_id(user_id)
+    if len(devices) == 0:
+        await websocket.close(code=4406, reason="The user does not have a device")
+        return
+    sock = websocket.app.state.zmq_context.socket(zmq.SUB)
+    sock.connect("tcp://localhost:5574")
+    for device in devices:
+        print(f"subscribing to {device.mac_address}")
+        sock.setsockopt(zmq.SUBSCRIBE, str(device.mac_address).encode())
+
+    try:
+        while True:
+            msg = await sock.recv_string()
+            await websocket.send_text(msg)
+    finally:
+        sock.setsockopt(zmq.LINGER, 0)
+        sock.close()

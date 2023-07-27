@@ -1,0 +1,238 @@
+import json
+import zmq
+import threading
+import sched
+import time
+import psycopg2
+
+
+def connect_to_database():
+    conn = psycopg2.connect(database='frog',
+                            host='localhost',
+                            user='frog',
+                            password='frog!123',
+                            port=5433)
+    return conn
+
+
+class DeviceRepository():
+    def __init__(self, conn):
+        self.conn = conn
+
+    def get_mac_address_by_mac_address(self, mac_address):
+        cur = self.conn.cursor()
+        device_id = None
+        try:
+            cur.execute(
+                f"SELECT id FROM device WHERE mac_address='{mac_address}';")
+            device_id = cur.fetchone()
+        except Exception as e:
+            print(e)
+        cur.close()
+        return device_id
+
+
+class SensorRepository():
+    def __init__(self, conn):
+        self.conn = conn
+
+    def get_sensor_by_device_id_and_pin_number(self, device_id, pin_number):
+        cur = self.conn.cursor()
+        sensor_id = None
+        try:
+            cur.execute(
+                f"SELECT id FROM sensor WHERE device_id={device_id} AND pin_number={pin_number};")
+            sensor_id = cur.fetchone()
+        except Exception as e:
+            print(e)
+        cur.close()
+        return sensor_id
+
+
+class Alert():
+    def __init__(self, mac_address, pin_number, alert_number, date, description, priority, served):
+        self.mac_address = mac_address
+        self.pin_number = pin_number
+        self.alert_number = alert_number
+        self.date = date
+        self.description = description
+        self.priority = priority
+        self.served = served
+
+    def __str__(self):
+        return f'Alert: mac_address: {self.mac_address}, pin_number: {self.pin_number}, alert_number: {self.alert_number}, date: {self.date}, description: {self.description}, priority: {self.priority}, served: {self.served}'
+
+
+class Device():
+    def __init__(self, device_id):
+        self.device_id = device_id
+        self.sensor_ids = {}
+
+    def add_sensor_id(self, sensor_id, pin_number):
+        self.sensor_ids[pin_number] = sensor_id
+
+    def get_sensor_id(self, pin_number):
+        return self.sensor_ids.get(pin_number)
+
+
+class DeviceMatcher():
+    def __init__(self, device_repository: DeviceRepository, sensor_repository: SensorRepository):
+        self.device_repository = device_repository
+        self.sensor_repository = sensor_repository
+        self.cache = {}
+
+    def get_device_id(self, mac_address):
+        device_id = self.cache.get(mac_address)
+        if device_id is None:
+            device_id = self.device_repository.get_mac_address_by_mac_address(
+                mac_address)
+            device_id = device_id[0]
+            self.cache[mac_address] = device_id
+        return device_id
+
+    def get_sensor_id(self, device_id, pin_number):
+        device = self.cache.get(device_id)
+        if device is None:
+            device = Device(device_id)
+            self.cache[device_id] = device
+        sensor_id = device.get_sensor_id(pin_number)
+        if sensor_id is None:
+            sensor_id = self.sensor_repository.get_sensor_by_device_id_and_pin_number(
+                device_id, pin_number)
+            if sensor_id is None:
+                return None
+            sensor_id = sensor_id[0]
+            device.add_sensor_id(sensor_id, pin_number)
+        return sensor_id
+
+
+class AlertRepository():
+    def __init__(self, conn, device_matcher: DeviceMatcher):
+        self.conn = conn
+        self.device_matcher = device_matcher
+
+    def insert_alerts(self, alerts):
+        cur = self.conn.cursor()
+        for alert in alerts:
+            device_id = self.device_matcher.get_device_id(alert.mac_address)
+            if device_id is None:
+                continue
+            sensor_id = None
+            if alert.pin_number != 'null':
+                sensor_id = self.device_matcher.get_sensor_id(
+                    device_id, alert.pin_number)
+            if sensor_id is None:
+                sensor_id = 'null'
+            try:
+                cur.execute(
+                    f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, {sensor_id}, {alert.alert_number}, '{alert.date}', '{alert.description}', {alert.priority}, {alert.served});")
+                self.conn.commit()
+            except Exception as e:
+                self.conn.rollback()
+                cur.execute(
+                    f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, null, {alert.alert_number}, '{alert.date}', 'error during insert: {e}', 10000, {alert.served});")
+                self.conn.commit()
+        cur.close()
+
+
+def serialize(message) -> Alert:
+    message = json.loads(message)
+    if message.get('alert') is not None:
+        message = message.get('alert')
+    else:
+        print('invalid message')
+        return None
+
+    mac_address = message.get('mac_address')
+    pin_number = message.get('pin_number')
+    if pin_number is None:
+        pin_number = 'null'
+    alert_number = message.get('alert_number')
+    date = message.get('date')
+    description = message.get('description')
+    priority = message.get('priority')
+    served = message.get('served')
+    if served is None:
+        served = False
+    return Alert(mac_address, pin_number, alert_number, date, description, priority, served)
+
+
+class AlertBuffer():
+    def __init__(self, scheduler: sched.scheduler, alert_repository: AlertRepository):
+        self.scheduler = scheduler
+        self.alert_repository = alert_repository
+        self.alerts = []
+
+    def __push_alerts_to_database(self):
+        self.alert_repository.insert_alerts(self.alerts)
+        self.clear_alerts()
+        print('pushed alerts to database')
+        self.scheduler.enter(5, 1, self.__push_alerts_to_database)
+
+    def add_alert(self, alert):
+        self.alerts.append(alert)
+
+    def get_alerts(self):
+        return self.alerts
+
+    def clear_alerts(self):
+        self.alerts = []
+
+    def run(self):
+        self.scheduler.enter(5, 1, self.__push_alerts_to_database)
+        self.scheduler.run()
+
+
+class Notifier():
+    def __init__(self, port: int):
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PUB)
+        self.socket.bind(f"tcp://*:{port}")
+
+    def notify(self, topic, message):
+        self.socket.send(f'{topic} {message}'.encode('utf-8'))
+
+
+class Puller():
+    def __init__(self, alert_buffer: AlertBuffer, host: str, port: int):
+        self.alert_buffer = alert_buffer
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PULL)
+        self.socket.connect(f"tcp://{host}:{port}")
+        self.notifier = Notifier(5574)
+
+    def pull(self):
+        message = self.socket.recv()
+        alert = serialize(message)
+        self.notifier.notify(alert.mac_address, message)
+        print(alert)
+        return alert
+
+    def pull_and_add_to_buffer(self):
+        alert = self.pull()
+        self.alert_buffer.add_alert(alert)
+
+    def run(self):
+        thread = threading.Thread(target=self.alert_buffer.run)
+        thread.start()
+        while True:
+            self.pull_and_add_to_buffer()
+
+
+def main():
+    scheduler = sched.scheduler(time.time, time.sleep)
+
+    db_connection = connect_to_database()
+    device_repository = DeviceRepository(db_connection)
+    sensor_repository = SensorRepository(db_connection)
+    device_matcher = DeviceMatcher(device_repository, sensor_repository)
+    alert_repository = AlertRepository(db_connection, device_matcher)
+
+    alert_buffer = AlertBuffer(scheduler, alert_repository)
+    puller = Puller(alert_buffer, 'localhost', 5572)
+    thread = threading.Thread(target=puller.run)
+    thread.start()
+
+
+if __name__ == '__main__':
+    main()

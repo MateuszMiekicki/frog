@@ -202,3 +202,5 @@ async def data_sensors(websocket: WebSocket, device_id: int):
         logging.debug("Delay: {}".format(delay))
         if delay > 0:
             await asyncio.sleep(delay)
+
+

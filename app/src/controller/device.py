@@ -6,6 +6,8 @@ from controller.dto.device import Device
 import zmq
 import time
 import logging
+import json
+from enum import Enum
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -24,9 +26,6 @@ def prepare_mac_address_to_add_to_database(mac_address):
 
 
 class ConfigForRequest():
-    # todo: move context to request app state
-    context = zmq.Context()
-
     def __init__(self, receiver_address: str, timeout: int):
         self.receiver_address = receiver_address
         self.timeout = timeout
@@ -38,8 +37,8 @@ class ConfigForRequest():
         return self.timeout
 
 
-async def send_request(client_id: str, request: str, zmq_config: ConfigForRequest):
-    client = zmq_config.context.socket(zmq.DEALER)
+async def send_request(client_id: str, request: str, context, zmq_config: ConfigForRequest):
+    client = context.socket(zmq.DEALER)
     client.identity = client_id.encode()
     client.connect(zmq_config.get_receiver_address())
     poller = zmq.Poller()
@@ -47,16 +46,14 @@ async def send_request(client_id: str, request: str, zmq_config: ConfigForReques
     client.send(request.encode())
     logging.debug(f"from {client_id} send request: {request}")
     if poller.poll(zmq_config.get_timeout()):
-        response = client.recv()
+        response = await client.recv_string()
         client.close()
-        # zmq_config.context.term()
         logging.trace(f"response: {response}")
-        return [status.HTTP_200_OK, response.decode()]
+        return [status.HTTP_200_OK, response]
 
     logging.debug("No response from server - timeout")
     client.close()
-    # zmq_config.context.term()
-    return [status.HTTP_408_REQUEST_TIMEOUT, "Connection timed out"]
+    return [status.HTTP_408_REQUEST_TIMEOUT, '{"cause":"Connection timed out"}']
 
 
 def __prepare_information_about_devices_with_sensors(devices, sensors):
@@ -117,18 +114,25 @@ async def delete_device(request: Request, device_id: int, token: str = Depends(o
     repo.delete_device(device_id)
     return {'detail': f'device with id {device_id} deleted'}
 
-# todo: move to request state context
-zmq_config = ConfigForRequest("tcp://toad:5571", 10000)
+zmq_config = ConfigForRequest("tcp://toad:5571", 5000)
 
 
 @router.get('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
 async def get_device_configuration(request: Request, device_id: int):
-    ret = await send_request("test", "get_config", zmq_config)
-    raise HTTPException(status_code=ret[0], detail=ret[1])
+    ret = await send_request("test", '''{ "type": "request", "purpose": "configuration", "payload": "1" }''', request.app.state.zmq_context, zmq_config)
+    raise HTTPException(status_code=ret[0], detail=json.loads(ret[1]))
+
+
+@router.post('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
+async def get_device_configuration(request: Request, device_id: int):
+    ret = await send_request("test", '''{ "type": "request", "purpose": "configuration", "payload": 1 }''', request.app.state.zmq_context, zmq_config)
+    raise HTTPException(status_code=ret[0], detail=json.loads(ret[1]))
 
 
 @router.post('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
 async def set_device_configuration(request: Request, device_id: int):
-    print(await request.json())
-    ret = await send_request("test", "set_config", zmq_config)
-    raise HTTPException(status_code=ret[0], detail=ret[1])
+    mac_address = deviceRepository.Device(
+        request.app.state.postgresql).get_device_by_id(device_id).mac_address
+
+    ret = await send_request(mac_address, "set_config", request.app.state.zmq_context, zmq_config)
+    raise HTTPException(status_code=ret[0], detail=json.loads(ret[1]))

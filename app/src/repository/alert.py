@@ -7,10 +7,10 @@ class Alert():
     def __init__(self, database: Database):
         self.database = database
 
-    def add_alert(self, device_id: int, sensor_id: int, date: str, description: str, served: bool = False):
+    def add_alert(self, device_id: int, sensor_id: int, alert_number: int, date: str, description: str, served: bool = False):
         with self.database.get_db() as db:
             new_alert = entity.Alert(
-                device_id=device_id, sensor_id=sensor_id, date=date, description=description, served=served)
+                device_id=device_id, sensor_id=sensor_id, alert_number=alert_number, date=date, description=description, served=served)
             db.add(new_alert)
             db.commit()
 

@@ -13,6 +13,7 @@ class Alert(Base):
     id = Column(Integer, primary_key=True)
     device_id = Column(Integer, ForeignKey('device.id'), nullable=False)
     sensor_id = Column(Integer, ForeignKey('sensor.id'), nullable=False)
+    alert_number = Column(Integer, nullable=False)
     date = Column(String, nullable=False)
     description = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
