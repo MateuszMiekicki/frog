@@ -8,10 +8,10 @@ import psycopg2
 
 def connect_to_database():
     conn = psycopg2.connect(database='frog',
-                            host='localhost',
+                            host='postgresql',
                             user='frog',
                             password='frog!123',
-                            port=5433)
+                            port=5432)
     return conn
 
 
