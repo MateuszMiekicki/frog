@@ -31,7 +31,7 @@ class DeviceRepository():
                 f"SELECT id FROM device WHERE mac_address='{mac_address}';")
             device_id = cur.fetchone()
         except Exception as e:
-            logging.warn(e)
+            logging.warning(e)
         cur.close()
         logging.debug(f"device_id: {device_id}, mac_address: {mac_address}")
         return device_id
@@ -49,7 +49,7 @@ class SensorRepository():
                 f"SELECT id FROM sensor WHERE device_id={device_id} AND pin_number={pin_number};")
             sensor_id = cur.fetchone()
         except Exception as e:
-            logging.warn(e)
+            logging.warning(e)
         cur.close()
         return sensor_id
 
@@ -92,7 +92,7 @@ class DeviceMatcher():
             device_id = self.device_repository.get_mac_address_by_mac_address(
                 mac_address)
             if device_id is None:
-                logging.warn(
+                logging.warning(
                     f"device with mac_address {mac_address} not found")
                 return None
             device_id = device_id[0]
@@ -137,6 +137,7 @@ class AlertRepository():
                     f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, {sensor_id}, {alert.alert_number}, '{alert.date}', '{alert.description}', {alert.priority}, {alert.served});")
                 self.conn.commit()
             except Exception as e:
+                logging.warning(e)
                 self.conn.rollback()
                 cur.execute(
                     f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, null, {alert.alert_number}, '{alert.date}', 'error during insert: {e}', 10000, {alert.served});")
@@ -146,15 +147,15 @@ class AlertRepository():
 
 def serialize(message) -> Alert:
     message = json.loads(message)
-    if message.get('alert') is not None:
-        message = message.get('alert')
-    else:
-        print('invalid message')
+    if message.get('alert') is None:
+        logging.warning(f"message does not contain alert: {message}")
         return None
 
+    message = message.get('alert')
     mac_address = message.get('mac_address')
     pin_number = message.get('pin_number')
     if pin_number is None:
+        logging.debug("pin_number is None, setting to 'null'")
         pin_number = 'null'
     alert_number = message.get('alert_number')
     date = message.get('date')
@@ -175,7 +176,6 @@ class AlertBuffer():
     def __push_alerts_to_database(self):
         self.alert_repository.insert_alerts(self.alerts)
         self.clear_alerts()
-        print('pushed alerts to database')
         self.scheduler.enter(5, 1, self.__push_alerts_to_database)
 
     def add_alert(self, alert):
@@ -213,13 +213,16 @@ class Puller():
     def pull(self):
         message = self.socket.recv()
         alert = serialize(message)
+        logging.debug(f"alert: {alert}")
+        if alert is None:
+            return None
         self.notifier.notify(alert.mac_address, message)
-        print(alert)
         return alert
 
     def pull_and_add_to_buffer(self):
         alert = self.pull()
-        self.alert_buffer.add_alert(alert)
+        if alert is not None:
+            self.alert_buffer.add_alert(alert)
 
     def run(self):
         thread = threading.Thread(target=self.alert_buffer.run)
@@ -232,6 +235,7 @@ def main():
     scheduler = sched.scheduler(time.time, time.sleep)
 
     db_connection = connect_to_database()
+    logging.info("connected to database")
     device_repository = DeviceRepository(db_connection)
     sensor_repository = SensorRepository(db_connection)
     device_matcher = DeviceMatcher(device_repository, sensor_repository)
@@ -241,6 +245,7 @@ def main():
     puller = Puller(alert_buffer, 'toad', 5572)
     thread = threading.Thread(target=puller.run)
     thread.start()
+    logging.info("started notifier")
 
 
 if __name__ == '__main__':
