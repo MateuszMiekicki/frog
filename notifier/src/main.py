@@ -4,6 +4,10 @@ import threading
 import sched
 import time
 import psycopg2
+import logging
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def connect_to_database():
@@ -27,8 +31,9 @@ class DeviceRepository():
                 f"SELECT id FROM device WHERE mac_address='{mac_address}';")
             device_id = cur.fetchone()
         except Exception as e:
-            print(e)
+            logging.warn(e)
         cur.close()
+        logging.debug(f"device_id: {device_id}, mac_address: {mac_address}")
         return device_id
 
 
@@ -44,7 +49,7 @@ class SensorRepository():
                 f"SELECT id FROM sensor WHERE device_id={device_id} AND pin_number={pin_number};")
             sensor_id = cur.fetchone()
         except Exception as e:
-            print(e)
+            logging.warn(e)
         cur.close()
         return sensor_id
 
@@ -86,6 +91,10 @@ class DeviceMatcher():
         if device_id is None:
             device_id = self.device_repository.get_mac_address_by_mac_address(
                 mac_address)
+            if device_id is None:
+                logging.warn(
+                    f"device with mac_address {mac_address} not found")
+                return None
             device_id = device_id[0]
             self.cache[mac_address] = device_id
         return device_id
