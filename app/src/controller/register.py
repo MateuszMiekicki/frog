@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Request, HTTPException
-from controller.dto.user import User, SimplifyUser
+from controller.dto.user import User, Email
 import uuid
 import repository.user as user_repo
 import repository.user_confirmation as user_confirmation_repo
@@ -46,7 +46,7 @@ async def login(request: Request, user: User):
 
 
 @router.post('/register/resend', status_code=status.HTTP_200_OK)
-async def resend_confirmation_code(request: Request, user: SimplifyUser):
+async def resend_confirmation_code(request: Request, user: Email):
     database = request.app.state.postgresql
     user_repository = user_repo.User(database)
     user = user_repository.get_user(user.email)

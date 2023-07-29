@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Request, HTTPException
-from controller.dto.user import User, SimplifyUser
+from controller.dto.user import User, Email
 import controller.facade.user_repository as facade_repository
 import repository.user as repository
 import controller.facade.user_authenticator as facade_authenticator
@@ -29,7 +29,7 @@ def __generate_new_password():
 
 
 @router.post('/login/forgot-password', status_code=status.HTTP_200_OK)
-async def reset_password(request: Request, user: SimplifyUser):
+async def reset_password(request: Request, user: Email):
     database = request.app.state.postgresql
     user_repository = repository.User(database)
     user = user_repository.get_user(user.email)

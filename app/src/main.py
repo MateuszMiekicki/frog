@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from configuration import logger, configuration
-from controller import register, login, device, data, sensor, alert
+from controller import register, login, device, data, sensor, alert, user
 from security.authenticate import Authenticate
 from fastapi.security import HTTPBearer
 import repository.user as repository
@@ -15,6 +15,7 @@ app.include_router(device.router)
 app.include_router(data.router)
 app.include_router(sensor.router)
 app.include_router(alert.router)
+app.include_router(user.router)
 
 
 @app.on_event('startup')

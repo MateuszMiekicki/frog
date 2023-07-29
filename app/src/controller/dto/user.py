@@ -6,5 +6,9 @@ class User(BaseModel):
     password: SecretStr
 
 
-class SimplifyUser(BaseModel):
+class Email(BaseModel):
     email: EmailStr
+
+
+class Password(BaseModel):
+    password: SecretStr
