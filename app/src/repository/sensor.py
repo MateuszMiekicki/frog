@@ -22,23 +22,19 @@ class Sensor():
     def get_sensors_assigned_to_device(self, device_id: int):
         with self.database.get_db() as db:
             return db.query(entity.Sensor).filter(entity.Sensor.device_id == device_id).all()
-    # def get_device_by_id(self, device_id: int):
-    #     with self.database.get_db() as db:
-    #         return db.query(entity.Device).filter(entity.Device.id == device_id).first()
-    #     raise Exception('todo: error')
 
-    # def get_device_by_key(self, key: str):
-    #     with self.database.get_db() as db:
-    #         return db.query(entity.Device).filter(entity.Device.key == key).first()
-    #     raise Exception('todo: error')
+    def get_sensor_by_id(self, sensor_id: int):
+        with self.database.get_db() as db:
+            return db.query(entity.Sensor).filter(entity.Sensor.id == sensor_id).first()
 
-    # def get_devices(self, user_id: int):
-    #     with self.database.get_db() as db:
-    #         return db.query(entity.Device).filter(entity.Device.user_id == user_id).all()
-    #     raise Exception('todo: error')
+    def delete_sensor(self, sensor_id: int):
+        with self.database.get_db() as db:
+            db.query(entity.Sensor).filter(
+                entity.Sensor.id == sensor_id).delete()
+            db.commit()
 
-    # def delete_device(self, device_id: int):
-    #     with self.database.get_db() as db:
-    #         db.query(entity.Device).filter(
-    #             entity.Device.id == device_id).delete()
-    #         db.commit()
+    def update_sensor(self, sensor: entity.Sensor):
+        with self.database.get_db() as db:
+            db.query(entity.Sensor).filter(entity.Sensor.id == sensor.id).update(
+                {entity.Sensor.name: sensor.name, entity.Sensor.pin_number: sensor.pin_number, entity.Sensor.type: sensor.type, entity.Sensor.min_value: sensor.min_value, entity.Sensor.max_value: sensor.max_value})
+            db.commit()
