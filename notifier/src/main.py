@@ -24,7 +24,7 @@ consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(logFormatter)
 rootLogger.addHandler(consoleHandler)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.getLogger().setLevel('debug')
 
 
 def connect_to_database():
