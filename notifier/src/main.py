@@ -5,6 +5,7 @@ import sched
 import time
 import psycopg2
 import logging
+import datetime
 
 PULLER_HOST = 'toad'
 PULLER_PORT = 5572
