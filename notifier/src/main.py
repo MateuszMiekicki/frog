@@ -137,7 +137,7 @@ class AlertRepository():
                 logging.warning("device_id is None, skipping alert insert")
                 continue
             sensor_id = None
-            if sensor.date is None or sensor.date == 'null':
+            if alert.date is None or sensor.date == 'null':
                 sensor.date = datetime.datetime.now()
             if alert.pin_number != 'null':
                 sensor_id = self.device_matcher.get_sensor_id(
