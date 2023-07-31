@@ -134,7 +134,7 @@ class AlertRepository():
         return True
 
     def __full_not_mandatory_fields(self, alert):
-        if __is_valid_date(alert.date) is False:
+        if self.__is_valid_date(alert.date) is False:
             alert.date = datetime.datetime.now()
         if alert.pin_number is None:
             alert.pin_number = 'null'
@@ -147,7 +147,7 @@ class AlertRepository():
                 logging.warning("device_id is None, skipping alert insert")
                 continue
             sensor_id = None
-            alert = __full_not_mandatory_fields(alert)
+            alert = self.__full_not_mandatory_fields(alert)
             if alert.pin_number != 'null':
                 sensor_id = self.device_matcher.get_sensor_id(
                     device_id, alert.pin_number)
