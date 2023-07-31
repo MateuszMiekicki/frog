@@ -181,6 +181,10 @@ class AlertRepository():
                 continue
 
             sensor_id = self.__get_sensor_id(device_id, alert.pin_number)
+            if sensor_id is None:
+                logging.warning(
+                    f"not found sensor_id '{sensor_id}' for pin_number '{alert.pin_number}' related to device_id '{device_id}', skipping alert insert: {alert}")
+                continue
 
             self.__insert(cur, device_id, sensor_id, alert)
         cur.close()
