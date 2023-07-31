@@ -176,7 +176,8 @@ class AlertRepository():
 
             device_id = self.device_matcher.get_device_id(alert.mac_address)
             if device_id is None:
-                logging.warning("device_id is None, skipping alert insert")
+                logging.warning(
+                    f"not found device_id '{device_id}' with mac_address '{alert.mac_address}', skipping alert insert: {alert}")
                 continue
 
             sensor_id = self.__get_sensor_id(device_id, alert.pin_number)
