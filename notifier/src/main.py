@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def connect_to_database():
-    conn = psycopg2.connect(database='frog',
+    conn = psycopg2.connect(database='smart-terrarium',
                             host='postgresql',
                             user='frog',
                             password='frog!123',
