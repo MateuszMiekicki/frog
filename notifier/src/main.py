@@ -121,10 +121,12 @@ class AlertRepository():
         self.device_matcher = device_matcher
 
     def insert_alerts(self, alerts):
+        logging.debug(f"Insert alerts: {alerts}")
         cur = self.conn.cursor()
         for alert in alerts:
             device_id = self.device_matcher.get_device_id(alert.mac_address)
             if device_id is None:
+                logging.warning("device_id is None, skipping alert insert")
                 continue
             sensor_id = None
             if alert.pin_number != 'null':
