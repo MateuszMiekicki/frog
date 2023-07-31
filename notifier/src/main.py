@@ -16,6 +16,14 @@ USER = 'frog'
 PASSWORD = 'frog!123'
 PORT = 5432
 
+logging.Formatter.converter = time.gmtime
+rootLogger = logging.getLogger()
+logFormatter = logging.Formatter(
+    "[%(asctime)sUTC] - [%(levelname)s]  %(message)s")
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+rootLogger.addHandler(consoleHandler)
+
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -183,7 +191,7 @@ class AlertRepository():
             sensor_id = self.__get_sensor_id(device_id, alert.pin_number)
             if sensor_id is None:
                 logging.warning(
-                    f"not found sensor_id '{sensor_id}' for pin_number '{alert.pin_number}' related to device_id '{device_id}', skipping alert insert: {alert}")
+                    f"not found sensor_id for pin_number '{alert.pin_number}' related to device_id '{device_id}', skipping alert insert: {alert}")
                 continue
 
             self.__insert(cur, device_id, sensor_id, alert)
