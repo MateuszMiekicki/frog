@@ -6,16 +6,24 @@ import time
 import psycopg2
 import logging
 
+PULLER_HOST = 'toad'
+PULLER_PORT = 5572
+
+DATABASE = 'smart-terrarium'
+DATABASE_HOST = 'postgresql'
+USER = 'frog'
+PASSWORD = 'frog!123'
+PORT = 5432
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 def connect_to_database():
-    conn = psycopg2.connect(database='smart-terrarium',
-                            host='postgresql',
-                            user='frog',
-                            password='frog!123',
-                            port=5432)
+    conn = psycopg2.connect(database=DATABASE,
+                            host=DATABASE_HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
     return conn
 
 
@@ -129,6 +137,8 @@ class AlertRepository():
                 logging.warning("device_id is None, skipping alert insert")
                 continue
             sensor_id = None
+            if sensor.date is None or sensor.date == 'null':
+                sensor.date = datetime.datetime.now()
             if alert.pin_number != 'null':
                 sensor_id = self.device_matcher.get_sensor_id(
                     device_id, alert.pin_number)
@@ -244,7 +254,7 @@ def main():
     alert_repository = AlertRepository(db_connection, device_matcher)
 
     alert_buffer = AlertBuffer(scheduler, alert_repository)
-    puller = Puller(alert_buffer, 'toad', 5572)
+    puller = Puller(alert_buffer, PULLER_HOST, PULLER_PORT)
     thread = threading.Thread(target=puller.run)
     thread.start()
     logging.info("started notifier")
