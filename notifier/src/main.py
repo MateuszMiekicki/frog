@@ -16,6 +16,8 @@ USER = 'frog'
 PASSWORD = 'frog!123'
 PORT = 5432
 
+SCHEDULER_INTERVAL_SEC = 5
+
 logging.Formatter.converter = time.gmtime
 rootLogger = logging.getLogger()
 logFormatter = logging.Formatter(
@@ -175,15 +177,11 @@ class AlertRepository():
             self.conn.commit()
 
     def insert_alerts(self, alerts):
-        logging.debug("---------------------------------")
-        logging.info(f"inserting alerts: {len(alerts)}")
+        logging.debug(
+            f"Scheduler interval {SCHEDULER_INTERVAL_SEC}s ---------------------------------")
+        logging.debug(f"inserting alerts: {len(alerts)}")
         cur = self.conn.cursor()
         for alert in alerts:
-            if not alert.is_valid_alert():
-                logging.warning(
-                    f"alert is not valid, skipping alert insert: {alert}")
-                continue
-
             device_id = self.device_matcher.get_device_id(alert.mac_address)
             if device_id is None:
                 logging.warning(
@@ -231,7 +229,8 @@ class AlertBuffer():
     def __push_alerts_to_database(self):
         self.alert_repository.insert_alerts(self.alerts)
         self.clear_alerts()
-        self.scheduler.enter(5, 1, self.__push_alerts_to_database)
+        self.scheduler.enter(SCHEDULER_INTERVAL_SEC, 1,
+                             self.__push_alerts_to_database)
 
     def add_alert(self, alert):
         self.alerts.append(alert)
@@ -269,6 +268,9 @@ class Puller():
         message = self.socket.recv()
         alert = serialize(message)
         logging.debug(f"alert: {alert}")
+        if not alert.is_valid_alert():
+            logging.warning(f"recv alert is not valid: {alert}")
+            return None
         if alert is None:
             return None
         self.notifier.notify(alert.mac_address, message)
