@@ -72,6 +72,18 @@ class Alert():
         self.description = description
         self.priority = priority
         self.served = served
+        self.__fill_mandatory_fields_defaults_if_not_present()
+
+    def __fill_mandatory_fields_defaults_if_not_present(self):
+        if self.date is None:
+            self.date = datetime.datetime.now()
+        if self.pin_number is None:
+            self.pin_number = 'null'
+
+    def is_valid_alert(self):
+        if self.mac_address is None or self.alert_number is None or self.description is None or self.priority is None or self.served is None:
+            return False
+        return True
 
     def __str__(self):
         return f'Alert: mac_address: {self.mac_address}, pin_number: {self.pin_number}, alert_number: {self.alert_number}, date: {self.date}, description: {self.description}, priority: {self.priority}, served: {self.served}'
@@ -129,42 +141,47 @@ class AlertRepository():
         self.conn = conn
         self.device_matcher = device_matcher
 
-    def __is_valid_date(self, date):
-        if date is None or date == 'null' or len(date) == 0:
-            return False
-        return True
+    def __get_sensor_id(self, device_id, pin_number):
+        sensor_id = 'null'
+        if pin_number != 'null':
+            sensor_id = self.device_matcher.get_sensor_id(
+                device_id, pin_number)
+        return sensor_id
 
-    def __full_not_mandatory_fields(self, alert):
-        if self.__is_valid_date(alert.date) is False:
-            alert.date = datetime.datetime.now()
-        if alert.pin_number is None:
-            alert.pin_number = 'null'
-        return alert
+    def __prepare_insert_query(self, device_id, sensor_id, alert):
+        return f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, {sensor_id}, {alert.alert_number}, '{alert.date}', '{alert.description}', {alert.priority}, {alert.served});"
+
+    def __prepare_alert_when_insert_fails_query(self, device_id, alert, e):
+        return f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, 'null', {alert.alert_number}, '{alert.date}', 'error during insert: {e}', 10000, {alert.served});"
+
+    def __insert(self, cur, device_id, sensor_id, alert):
+        try:
+            cur.execute(self.__prepare_insert_query(
+                device_id, sensor_id, alert))
+            self.conn.commit()
+        except Exception as e:
+            logging.warning(e)
+            self.conn.rollback()
+            cur.execute(
+                self.__prepare_alert_when_insert_fails_query(device_id, alert, e))
+            self.conn.commit()
 
     def insert_alerts(self, alerts):
         cur = self.conn.cursor()
         for alert in alerts:
+            if not alert.is_valid_alert():
+                logging.warning(
+                    f"alert is not valid, skipping alert insert: {alert}")
+                continue
+
             device_id = self.device_matcher.get_device_id(alert.mac_address)
             if device_id is None:
                 logging.warning("device_id is None, skipping alert insert")
                 continue
-            sensor_id = None
-            alert = self.__full_not_mandatory_fields(alert)
-            if alert.pin_number != 'null':
-                sensor_id = self.device_matcher.get_sensor_id(
-                    device_id, alert.pin_number)
-            if sensor_id is None:
-                sensor_id = 'null'
-            try:
-                cur.execute(
-                    f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, {sensor_id}, {alert.alert_number}, '{alert.date}', '{alert.description}', {alert.priority}, {alert.served});")
-                self.conn.commit()
-            except Exception as e:
-                logging.warning(e)
-                self.conn.rollback()
-                cur.execute(
-                    f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, null, {alert.alert_number}, '{alert.date}', 'error during insert: {e}', 10000, {alert.served});")
-                self.conn.commit()
+
+            sensor_id = self.__get_sensor_id(device_id, alert.pin_number)
+
+            self.__insert(cur, device_id, sensor_id, alert)
         cur.close()
 
 
