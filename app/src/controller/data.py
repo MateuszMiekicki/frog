@@ -59,6 +59,7 @@ async def get_data(database, devices):
     cursor = database.cursor()
     cursor.execute(prepare_query(devices))
     rows = cursor.fetchmany(size=50)
+    logging.trace("Rows: {}".format(rows))
     return json.dumps(prepare_message_for_client(rows))
 
 
@@ -202,5 +203,3 @@ async def data_sensors(websocket: WebSocket, device_id: int):
         logging.debug("Delay: {}".format(delay))
         if delay > 0:
             await asyncio.sleep(delay)
-
-
