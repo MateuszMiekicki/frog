@@ -175,6 +175,8 @@ class AlertRepository():
             self.conn.commit()
 
     def insert_alerts(self, alerts):
+        log.debug("---------------------------------")
+        logging.info(f"inserting alerts: {len(alerts)}")
         cur = self.conn.cursor()
         for alert in alerts:
             if not alert.is_valid_alert():
