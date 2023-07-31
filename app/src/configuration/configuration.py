@@ -224,3 +224,16 @@ def parse_args():
         configuration_files['databases'] = args.databases_config
     if args.mailer_config is not None:
         configuration_files['mailer'] = args.mailer_config
+
+
+class ConfigForRequest():
+    def __init__(self, zmq_context, receiver_address: str, timeout: int):
+        self.zmq_context = zmq_context
+        self.receiver_address = receiver_address
+        self.timeout = timeout
+
+    def get_receiver_address(self):
+        return self.receiver_address
+
+    def get_timeout(self):
+        return self.timeout

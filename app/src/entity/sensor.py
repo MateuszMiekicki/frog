@@ -13,5 +13,3 @@ class Sensor(Base):
     type = Column(String)
     min_value = Column(Integer)
     max_value = Column(Integer)
-
-    device = relationship('Device', back_populates='sensors')

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status, Request, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from configuration import configuration
 import repository.device as deviceRepository
 import repository.sensor as sensorRepository
 from controller.dto.device import Device
@@ -26,22 +27,10 @@ def prepare_mac_address_to_add_to_database(mac_address):
     return __cast_to_lower_case(__trim_mac_address(mac_address))
 
 
-class ConfigForRequest():
-    def __init__(self, receiver_address: str, timeout: int):
-        self.receiver_address = receiver_address
-        self.timeout = timeout
-
-    def get_receiver_address(self):
-        return self.receiver_address
-
-    def get_timeout(self):
-        return self.timeout
-
-
-async def send_request(client_id: str, request: str, context, zmq_config: ConfigForRequest):
-    client = context.socket(zmq.DEALER)
+async def send_request(client_id: str, request: str, zmq_config: configuration.ConfigForRequest):
+    client = zmq_config.zmq_context.socket(zmq.DEALER)
     client.identity = client_id.encode()
-    client.connect(zmq_config.get_receiver_address())
+    client.connect(zmq_config.get_receiver_address())   
     poller = zmq.Poller()
     poller.register(client, zmq.POLLIN)
     client.send(request.encode())
@@ -115,8 +104,6 @@ async def delete_device(request: Request, device_id: int, token: str = Depends(o
     repo.delete_device(device_id)
     return {'detail': f'device with id {device_id} deleted'}
 
-zmq_config = ConfigForRequest("tcp://toad:5571", 5000)
-
 
 @router.get('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
 async def get_device_configuration(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
@@ -129,13 +116,13 @@ async def get_device_configuration(request: Request, device_id: int, token: str 
     if device.user_id != decoded_token.get('sub'):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=f'The device with the id {device_id} is not owned by you.')
-    ret = await send_request(device.mac_address, '''{ "type": "request", "purpose": "configuration", "payload": "{}" }''', request.app.state.zmq_context, zmq_config)
+    ret = await send_request(device.mac_address, '''{ "type": "request", "purpose": "configuration", "payload": "{}" }''', request.app.state.zmq_config)
     raise HTTPException(status_code=ret[0], detail=json.loads(ret[1]))
 
 
 @router.post('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
 async def get_device_configuration(request: Request, device_id: int):
-    ret = await send_request("test", '''{ "type": "request", "purpose": "configuration", "payload": 1 }''', request.app.state.zmq_context, zmq_config)
+    ret = await send_request("test", '''{ "type": "request", "purpose": "configuration", "payload": 1 }''', request.app.state.zmq_config)
     raise HTTPException(status_code=ret[0], detail=json.loads(ret[1]))
 
 

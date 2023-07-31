@@ -6,7 +6,8 @@ from entity.sensor import Sensor
 
 class Device(Base):
     __tablename__ = 'device'
-    sensors = relationship('Sensor', cascade="all, delete-orphan")
+    sensors = relationship('Sensor', backref='sensor',
+                           cascade="all, delete-orphan")
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
