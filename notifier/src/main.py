@@ -129,7 +129,7 @@ class AlertRepository():
         self.device_matcher = device_matcher
 
     def __is_valid_date(self, date):
-        if alert.date is None or alert.date == 'null' or len(alert.date) == 0:
+        if date is None or date == 'null' or len(date) == 0:
             return False
         return True
 
