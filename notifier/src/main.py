@@ -138,6 +138,7 @@ class AlertRepository():
             alert.date = datetime.datetime.now()
         if alert.pin_number is None:
             alert.pin_number = 'null'
+        return alert
 
     def insert_alerts(self, alerts):
         cur = self.conn.cursor()
