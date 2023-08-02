@@ -32,8 +32,8 @@ class Message():
         return False
 
 
-def build_request_get_configurations(payload: str):
-    return Message(MessageType.REQUEST, MessagePurpose.GET_CONFIGURATIONS, payload)
+def build_request_get_configurations():
+    return Message(MessageType.REQUEST, MessagePurpose.GET_CONFIGURATIONS, '''{}''')
 
 
 def build_request_set_configurations(payload: str):
@@ -46,7 +46,9 @@ def serialize(message: Message):
         "purpose": message.purpose.value,
         "payload": message.payload
     }
-    return str(output).replace("'", '"')
+    output = str(output).replace("'", '"')
+    logging.debug(f"Serialized message: {output}")
+    return output
 
 
 class RequestStatus(Enum):
@@ -119,5 +121,5 @@ class DeviceRequester():
     #     requester.send(mac_address, message)
 
     async def send_get_configuration_request_to_device(self, mac_address: str):
-        message = build_request_get_configurations("{}")
+        message = build_request_get_configurations()
         return await self.requester.send_request_and_receive_response(mac_address, message)
