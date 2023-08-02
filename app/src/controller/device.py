@@ -137,17 +137,27 @@ async def delete_device(request: Request, device_id: int, token: str = Depends(o
 
 @router.get('/device/{device_id}/configuration', status_code=status.HTTP_200_OK)
 async def get_device_configuration(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
-    # decoded_token = request.app.state.authenticate.decode_token(token)
+    decoded_token = request.app.state.authenticate.decode_token(token)
     repo = deviceRepository.Device(request.app.state.postgresql)
     device = repo.get_device_by_id(device_id)
     if device is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f'The device with the id {device_id} was not found.')
-    # if device.user_id != decoded_token.get('sub'):
-    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-    #                         detail=f'The device with the id {device_id} is not owned by you.')
+    if device.user_id != decoded_token.get('sub'):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail=f'The device with the id {device_id} is not owned by you.')
+
     requester = sender.Requester(request.app.state.zmq_config)
     device_requester = sender.DeviceRequester(requester)
     response = await device_requester.send_get_configuration_request_to_device(
         device.mac_address)
-    return response
+    if response is None:
+        raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT,
+                            detail=f'Cannot get response from device with id {device_id}.')
+    try:
+        return json.loads(response)
+    except json.decoder.JSONDecodeError as e:
+        logging.warning(
+            f'Cannot parse response from device with id {device_id}. Error: {e}')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f'Cannot parse response from device with id {device_id}.')
