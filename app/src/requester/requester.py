@@ -33,7 +33,7 @@ class Message():
 
 
 def build_request_get_configurations():
-    return Message(MessageType.REQUEST, MessagePurpose.GET_CONFIGURATIONS, '''{}''')
+    return Message(MessageType.REQUEST, MessagePurpose.GET_CONFIGURATIONS, {})
 
 
 def build_request_set_configurations(payload: str):
