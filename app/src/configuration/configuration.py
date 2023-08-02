@@ -6,6 +6,8 @@ import argparse
 import psycopg2
 from configuration import logger, database
 from mailer import smtp
+import sys
+import asyncio
 
 
 class Environment():
@@ -237,3 +239,9 @@ class ConfigForRequest():
 
     def get_timeout(self):
         return self.timeout
+
+
+def set_event_loop_policy():
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    logging.debug(f"even loop policy: {asyncio.get_event_loop_policy()}")

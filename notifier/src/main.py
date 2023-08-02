@@ -200,6 +200,12 @@ class AlertRepository():
 
 def serialize(message) -> Alert:
     message = json.loads(message)
+    message = message.get('payload')
+    if message is None:
+        logging.warning(f"message does not contain payload: {message}")
+        return None
+
+    message = json.loads(message)
     if message.get('alert') is None:
         logging.warning(f"message does not contain alert: {message}")
         return None
@@ -265,7 +271,8 @@ class Puller():
         self.notifier = Notifier(5574)
 
     def pull(self):
-        message = self.socket.recv()
+        message = self.socket.recv_string()
+        logging.debug(f"Raw recv message {message}")
         alert = serialize(message)
         logging.debug(f"alert: {alert}")
         if not alert.is_valid_alert():

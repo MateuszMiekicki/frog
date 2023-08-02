@@ -7,6 +7,7 @@ import repository.user as repository
 import sys
 import zmq.asyncio
 import asyncio
+import logging
 
 app = FastAPI()
 app.include_router(register.router)
@@ -26,14 +27,17 @@ async def startup():
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
 
-    if sys.platform == 'win32':
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    host_for_requester = "toad"
+    port_for_requester = 5571
+    poller_timeout_for_requester = 5
     zmq_config = configuration.ConfigForRequest(
-        zmq.asyncio.Context.instance(), "tcp://toad:5571", 5000)
+        zmq.asyncio.Context(), f"tcp://{host_for_requester}:{port_for_requester}", poller_timeout_for_requester)
     app.state.zmq_config = zmq_config
-
+    logging.info(
+        f"ZMQ requester initialized on port {port_for_requester} and host {host_for_requester} with timeout {poller_timeout_for_requester} seconds")
 
 if __name__ == '__main__':
+    configuration.set_event_loop_policy()
     configuration.parse_args()
     frog_config = configuration.FrogConfiguration(
         configuration.read_config_from_file(configuration.configuration_files['frog']))
