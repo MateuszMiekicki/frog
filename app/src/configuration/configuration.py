@@ -10,6 +10,15 @@ import sys
 import asyncio
 
 
+def get_current_commit_hash_and_date():
+    import subprocess
+    hash_and_date = subprocess.check_output(
+        ['git', 'log', '-1', '--format=%H %ci']).decode('utf-8')
+    hash_and_date = hash_and_date[:-1]
+    commit_hash, date, time, time_zone = hash_and_date.split(' ')
+    return commit_hash, date, time, time_zone
+
+
 class Environment():
     def get_env(self, key, default=None):
         return os.environ.get(key, default)
@@ -96,6 +105,15 @@ class FrogConfiguration(Configuration):
             logging.info("No login level set, default set (INFO)")
             pass
         return LogLevel(log_level.upper())
+
+    def get_requester_configuration(self):
+        host = self.configuration_parser.parse(
+            str(super().get_key_from_config('requester_host')))
+        port = self.configuration_parser.parse(
+            str(super().get_key_from_config('requester_port')))
+        timeout = self.configuration_parser.parse(
+            str(super().get_key_from_config('requester_timeout')))
+        return host, int(port), int(timeout)
 
 
 class DatabaseConfiguration(Configuration):

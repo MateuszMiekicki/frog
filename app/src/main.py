@@ -19,6 +19,13 @@ app.include_router(alert.router)
 app.include_router(user.router)
 
 
+configuration.set_event_loop_policy()
+configuration.parse_args()
+frog_config = configuration.FrogConfiguration(
+    configuration.read_config_from_file(configuration.configuration_files['frog']))
+logger.set_log_level(frog_config.get_log_level())
+
+
 @app.on_event('startup')
 async def startup():
     app.state.postgresql = configuration.create_postgresql_instance()
@@ -27,9 +34,7 @@ async def startup():
     app.state.authenticate = Authenticate()
     app.state.security = HTTPBearer()
 
-    host_for_requester = "toad"
-    port_for_requester = 5571
-    poller_timeout_for_requester = 5
+    host_for_requester, port_for_requester, poller_timeout_for_requester = frog_config.get_requester_configuration()
     zmq_config = configuration.ConfigForRequest(
         zmq.asyncio.Context(), f"tcp://{host_for_requester}:{port_for_requester}", poller_timeout_for_requester)
     app.state.zmq_config = zmq_config
@@ -37,11 +42,9 @@ async def startup():
         f"ZMQ requester initialized on port {port_for_requester} and host {host_for_requester} with timeout {poller_timeout_for_requester} seconds")
 
 if __name__ == '__main__':
-    configuration.set_event_loop_policy()
-    configuration.parse_args()
-    frog_config = configuration.FrogConfiguration(
-        configuration.read_config_from_file(configuration.configuration_files['frog']))
-    logger.set_log_level(frog_config.get_log_level())
+    commit_hash, date, time, time_zone = configuration.get_current_commit_hash_and_date()
+    logging.info(f"Frog: {commit_hash} from {date} {time} {time_zone}")
+
     import uvicorn
     uvicorn.run(app, lifespan="on", host=frog_config.get_hostname(), port=frog_config.get_port(),
                 log_level='debug', log_config=None)

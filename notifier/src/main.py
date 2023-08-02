@@ -205,7 +205,6 @@ def serialize(message) -> Alert:
         logging.warning(f"message does not contain payload: {message}")
         return None
 
-    message = json.loads(message)
     if message.get('alert') is None:
         logging.warning(f"message does not contain alert: {message}")
         return None

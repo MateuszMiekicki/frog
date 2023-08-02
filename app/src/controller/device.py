@@ -155,6 +155,7 @@ async def get_device_configuration(request: Request, device_id: int, token: str 
         raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT,
                             detail=f'Cannot get response from device with id {device_id}.')
     try:
+        logging.debug(f"Response for request sended by device_id({device_id}) : {response}")
         return json.loads(response)
     except json.decoder.JSONDecodeError as e:
         logging.warning(
