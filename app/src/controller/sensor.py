@@ -4,6 +4,7 @@ import repository.sensor as sensor_repository
 import repository.device as device_repository
 from controller.dto.sensor import Sensor
 from controller.facade import device_checker
+import requester.requester as sender
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -118,3 +119,23 @@ async def update_sensors(request: Request, device_id: int, sensors: list[Sensor]
         sensor_repo.update_sensor(
             dto_sensor_to_entity(sensor_to_update.id, sensor))
     return {'detail': f'sensors with pin numbers {", ".join([str(sensor.pin_number) for sensor in sensors])} updated'}
+
+
+@router.post('/device/{device_id}/sensors', status_code=status.HTTP_200_OK)
+async def send_sensors_to_device(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
+    decoded_token = request.app.state.authenticate.decode_token(token)
+    user_id = decoded_token.get('sub')
+
+    device_repo = device_repository.Device(request.app.state.postgresql)
+    device = device_repo.get_device_by_id(device_id)
+    device_checker.is_device_exists(device, device_id)
+    device_checker.is_device_owned_by_user(device, user_id)
+
+    sensor_repo = sensor_repository.Sensor(request.app.state.postgresql)
+    sensors = sensor_repo.get_sensors_assigned_to_device(device_id)
+
+    requester = sender.Requester(request.app.state.zmq_config)
+    device_requester = sender.DeviceRequester(requester)
+    response = await device_requester.send_set_sensor_configuration_request_to_device(
+        device.mac_address, sensors)
+    return {'detail': response}

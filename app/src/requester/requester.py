@@ -3,6 +3,7 @@ from enum import Enum
 import zmq
 import zmq.asyncio
 import logging
+import json
 
 
 class MessageType(Enum):
@@ -11,8 +12,9 @@ class MessageType(Enum):
 
 
 class MessagePurpose(Enum):
-    SET_CONFIGURATIONS = "set_configurations"
-    GET_CONFIGURATIONS = "get_configurations"
+    SET_CONFIGURATIONS = "set_configuration"
+    GET_CONFIGURATIONS = "get_configuration"
+    SET_SENSOR_CONFIGURATION = "set_sensor_configuration"
 
 
 class Message():
@@ -38,6 +40,13 @@ def build_request_get_configurations():
 
 def build_request_set_configurations(payload: str):
     return Message(MessageType.REQUEST, MessagePurpose.SET_CONFIGURATIONS, payload)
+
+
+def build_request_set_sensor_configuration(payload: list[dict]):
+    payload = {
+        "sensors": payload
+    }
+    return Message(MessageType.REQUEST, MessagePurpose.SET_SENSOR_CONFIGURATION, payload)
 
 
 def serialize(message: Message):
@@ -122,4 +131,11 @@ class DeviceRequester():
 
     async def send_get_configuration_request_to_device(self, mac_address: str):
         message = build_request_get_configurations()
+        return await self.requester.send_request_and_receive_response(mac_address, message)
+
+    async def send_set_sensor_configuration_request_to_device(self, mac_address: str,  sensors: list[dict]):
+
+        configuration = [{"pin_number": int(sensor.pin_number), "type": sensor.type,
+                          "min_value": float(sensor.min_value), "max_value": float(sensor.max_value)} for sensor in sensors]
+        message = build_request_set_sensor_configuration(configuration)
         return await self.requester.send_request_and_receive_response(mac_address, message)
