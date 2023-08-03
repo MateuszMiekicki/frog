@@ -162,7 +162,7 @@ class AlertRepository():
         return f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, {sensor_id}, {alert.alert_number}, '{alert.date}', '{alert.description}', {alert.priority}, {alert.served});"
 
     def __prepare_alert_when_insert_fails_query(self, device_id, alert, e):
-        return f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, 'null', {alert.alert_number}, '{alert.date}', 'error during insert: {e}', 10000, {alert.served});"
+        return f"INSERT INTO alert (device_id, sensor_id, alert_number, date, description, priority, served) VALUES ({device_id}, null, {alert.alert_number}, '{alert.date}', 'error during insert: {e}', 10000, {alert.served});"
 
     def __insert(self, cur, device_id, sensor_id, alert):
         try:
