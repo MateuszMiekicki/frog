@@ -7,14 +7,14 @@ import psycopg2
 import logging
 import datetime
 
-PULLER_HOST = 'toad'
+PULLER_HOST = 'localhost'
 PULLER_PORT = 5572
 
 DATABASE = 'smart-terrarium'
-DATABASE_HOST = 'postgresql'
+DATABASE_HOST = 'localhost'
 USER = 'frog'
 PASSWORD = 'frog!123'
-PORT = 5432
+PORT = 5433
 
 SCHEDULER_INTERVAL_SEC = 5
 
@@ -86,7 +86,7 @@ class Alert():
 
     def __fill_mandatory_fields_defaults_if_not_present(self):
         if self.date is None:
-            self.date = datetime.datetime.now()
+            self.date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if self.pin_number is None:
             self.pin_number = 'null'
 
