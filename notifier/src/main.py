@@ -177,9 +177,9 @@ class AlertRepository():
             self.conn.commit()
 
     def insert_alerts(self, alerts):
-        logging.debug(
-            f"Scheduler interval {SCHEDULER_INTERVAL_SEC}s ---------------------------------")
-        logging.debug(f"inserting alerts: {len(alerts)}")
+        # logging.debug(
+        #     f"Scheduler interval {SCHEDULER_INTERVAL_SEC}s ---------------------------------")
+        # logging.debug(f"inserting alerts: {len(alerts)}")
         cur = self.conn.cursor()
         for alert in alerts:
             device_id = self.device_matcher.get_device_id(alert.mac_address)

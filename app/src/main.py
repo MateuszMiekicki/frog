@@ -46,5 +46,5 @@ if __name__ == '__main__':
 
     import uvicorn
     uvicorn.run(app, lifespan="on", host=frog_config.get_hostname(), port=frog_config.get_port(),
-                log_level='debug', log_config=None)
+                log_level='info', log_config=None)
     # ,ssl_keyfile='private/key.pem', ssl_certfile='private/cert.pem')
