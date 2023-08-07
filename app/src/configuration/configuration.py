@@ -258,6 +258,8 @@ class ConfigForRequest():
     def get_timeout(self):
         return self.timeout
 
+    def get_context(self):
+        return self.zmq_context
 
 def set_event_loop_policy():
     if sys.platform == 'win32':

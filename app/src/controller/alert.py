@@ -104,7 +104,7 @@ async def device_alerts_notifier(websocket: WebSocket):
     if len(devices) == 0:
         await websocket.close(code=4406, reason="The user does not have a device")
         return
-    sock = websocket.app.state.zmq_context.socket(zmq.SUB)
+    sock = websocket.app.state.zmq_config.get_context().socket(zmq.SUB)
     sock.connect("tcp://localhost:5574")
     for device in devices:
         print(f"subscribing to {device.mac_address}")

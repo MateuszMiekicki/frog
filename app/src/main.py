@@ -35,9 +35,8 @@ async def startup():
     app.state.security = HTTPBearer()
 
     host_for_requester, port_for_requester, poller_timeout_for_requester = frog_config.get_requester_configuration()
-    zmq_config = configuration.ConfigForRequest(
+    app.state.zmq_config = configuration.ConfigForRequest(
         zmq.asyncio.Context(), f"tcp://{host_for_requester}:{port_for_requester}", poller_timeout_for_requester)
-    app.state.zmq_config = zmq_config
     logging.info(
         f"ZMQ requester initialized on port {port_for_requester} and host {host_for_requester} with timeout {poller_timeout_for_requester} seconds")
 
