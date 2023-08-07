@@ -7,14 +7,14 @@ import psycopg2
 import logging
 import datetime
 
-PULLER_HOST = 'localhost'
+PULLER_HOST = 'toad'
 PULLER_PORT = 5572
 
 DATABASE = 'smart-terrarium'
-DATABASE_HOST = 'localhost'
+DATABASE_HOST = 'postgresql'
 USER = 'frog'
 PASSWORD = 'frog!123'
-PORT = 5433
+PORT = 5432
 
 SCHEDULER_INTERVAL_SEC = 5
 
