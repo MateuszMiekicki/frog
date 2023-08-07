@@ -11,3 +11,4 @@ psycopg2-binary~=2.9
 pyyaml #todo: add concrete version
 pyzmq==25
 tornado==6.3
+sse_starlette==1.6.1

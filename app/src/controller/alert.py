@@ -6,6 +6,8 @@ import logging
 from controller.data import authenticate_websocket
 from fastapi import WebSocket
 import zmq
+from sse_starlette.sse import EventSourceResponse
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 router = APIRouter()
@@ -102,7 +104,7 @@ async def device_alerts_notifier(websocket: WebSocket):
     devices = deviceRepository.Device(
         websocket.app.state.postgresql).get_devices_by_user_id(user_id)
     if len(devices) == 0:
-        await websocket.close(code=4406, reason="The user does not have a device")
+        await websocket.close(code=4404, reason="The user does not have a device")
         return
     sock = websocket.app.state.zmq_config.get_context().socket(zmq.SUB)
     sock.connect("tcp://localhost:5574")
@@ -117,3 +119,30 @@ async def device_alerts_notifier(websocket: WebSocket):
     finally:
         sock.setsockopt(zmq.LINGER, 0)
         sock.close()
+
+
+@router.get('/device/alert/stream')
+async def message_stream(request: Request, token: str = Depends(oauth2_scheme)):
+    decode_token = request.app.state.authenticate.decode_token(token)
+
+    devices = deviceRepository.Device(
+        request.app.state.postgresql).get_devices_by_user_id(decode_token.get('sub'))
+    if len(devices) == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'The user with the id {decode_token.get("sub")} has no devices.')
+
+    client = request.app.state.zmq_config.zmq_context.socket(zmq.SUB)
+    client.connect("tcp://localhost:5574")
+    for device in devices:
+        print(f"subscribing to {device.mac_address}")
+        client.setsockopt(zmq.SUBSCRIBE, str(device.mac_address).encode())
+
+    async def event_generator():
+        while True:
+            if await request.is_disconnected():
+                client.close()
+                break
+            alert = await client.recv_string()
+            yield alert
+
+    return EventSourceResponse(event_generator())
