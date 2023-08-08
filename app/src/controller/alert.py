@@ -94,7 +94,7 @@ async def get_alerts_with_parameters(request: Request,
         only_not_served=only_not_served)
 
 
-@router.websocket("/device/alert")
+@router.websocket("/devices/notifier/alerts")
 async def device_alerts_notifier(websocket: WebSocket):
     await websocket.accept()
     user_id = await authenticate_websocket(websocket)
@@ -121,7 +121,7 @@ async def device_alerts_notifier(websocket: WebSocket):
         sock.close()
 
 
-@router.get('/device/alert/stream')
+@router.get('/devices/notifier/alerts')
 async def message_stream(request: Request, token: str = Depends(oauth2_scheme)):
     decode_token = request.app.state.authenticate.decode_token(token)
 
