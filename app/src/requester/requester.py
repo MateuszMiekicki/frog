@@ -14,7 +14,7 @@ class MessageType(Enum):
 class MessagePurpose(Enum):
     SET_CONFIGURATIONS = "set_configuration"
     GET_CONFIGURATIONS = "get_configuration"
-    SET_SENSOR_CONFIGURATION = "set_sensor_configuration"
+    SET_SENSORS_CONFIGURATION = "SET_SENSORS_CONFIGURATION"
 
 
 class Message():
@@ -49,7 +49,7 @@ def build_request_set_sensor_configuration(payload: list[dict]):
     payload = {
         "sensors": payload
     }
-    return Message(MessageType.REQUEST, MessagePurpose.SET_SENSOR_CONFIGURATION, payload)
+    return Message(MessageType.REQUEST, MessagePurpose.SET_SENSORS_CONFIGURATION, payload)
 
 
 def serialize(message: Message):
