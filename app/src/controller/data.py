@@ -56,7 +56,7 @@ class NoDeviceIdException(Exception):
 
 
 async def get_data(database, devices):
-    await asyncio.sleep(0.1)
+    asyncio.sleep(0.1)
     cursor = database.cursor()
     cursor.execute(prepare_query(devices))
     rows = cursor.fetchmany(size=50)
