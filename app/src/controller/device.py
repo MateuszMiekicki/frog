@@ -146,10 +146,19 @@ async def set_device_configuration(request: Request, device_id: int, token: str 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=f'The device with the id {device_id} is not owned by you.')
 
+    body = await request.body()
+    try:
+        print(body.decode('utf-8'))
+        body = json.loads(body.decode('utf-8'))
+    except json.decoder.JSONDecodeError as e:
+        logging.warning(
+            f'Cannot parse body from request. Error: {e}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f'Cannot parse body from request.')
     requester = sender.Requester(request.app.state.zmq_config)
     device_requester = sender.DeviceRequester(requester)
-    response = await device_requester.send_set_sensor_configuration_request_to_device(
-        device.mac_address, request.body())
+    response = await device_requester.send_set_configuration_request_to_device(
+        device.mac_address, body)
     if response is None:
         raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT,
                             detail=f'Cannot get response from device with id {device_id}.')

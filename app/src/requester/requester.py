@@ -38,7 +38,10 @@ def build_request_get_configurations():
     return Message(MessageType.REQUEST, MessagePurpose.GET_CONFIGURATIONS, {})
 
 
-def build_request_set_configurations(payload: str):
+def build_request_set_configurations(payload):
+    payload = {
+        "configuration": payload
+    }
     return Message(MessageType.REQUEST, MessagePurpose.SET_CONFIGURATIONS, payload)
 
 
@@ -131,6 +134,10 @@ class DeviceRequester():
 
     async def send_get_configuration_request_to_device(self, mac_address: str):
         message = build_request_get_configurations()
+        return await self.requester.send_request_and_receive_response(mac_address, message)
+
+    async def send_set_configuration_request_to_device(self, mac_address: str, configuration):
+        message = build_request_set_configurations(configuration)
         return await self.requester.send_request_and_receive_response(mac_address, message)
 
     async def send_set_sensor_configuration_request_to_device(self, mac_address: str,  sensors: list[dict]):
