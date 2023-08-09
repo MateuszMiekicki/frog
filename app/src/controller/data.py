@@ -56,12 +56,12 @@ class NoDeviceIdException(Exception):
 
 
 async def get_data(database, devices):
-    asyncio.sleep(0.1)
+    await asyncio.sleep(0.1)
     cursor = database.cursor()
     cursor.execute(prepare_query(devices))
     rows = cursor.fetchmany(size=50)
     logging.trace("Rows: {}".format(rows))
-    yield json.dumps(prepare_message_for_client(rows))
+    return json.dumps(prepare_message_for_client(rows))
 
 
 class Parameters():
