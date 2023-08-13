@@ -130,7 +130,7 @@ async def data_sensors(websocket: WebSocket):
     user_id = await authenticate_websocket(websocket)
     if user_id is None:
         return
-    conn = websocket.app.state.questdb
+    questdb_instance = websocket.app.state.questdb
     parameters = Parameters()
 
     async def listen_for_messages():
@@ -155,7 +155,7 @@ async def data_sensors(websocket: WebSocket):
             await websocket.close(code=4406, reason="The user does not have a device")
             return
         try:
-            data = await get_data(conn, devices)
+            data = await get_data(questdb_instance.get_db(), devices)
             await websocket.send_text(data)
         except websockets.exceptions.ConnectionClosed:
             break
@@ -176,7 +176,7 @@ async def data_sensors(websocket: WebSocket, device_id: int):
     if user_id is None:
         logging.error("User not authorization")
         return
-    conn = websocket.app.state.questdb
+    questdb_instance = websocket.app.state.questdb
     repo = repository.Device(websocket.app.state.postgresql)
     devices = preprocessing_parameters_with_device_id(
         [device_id], repo.get_devices_by_user_id(user_id))
@@ -187,11 +187,8 @@ async def data_sensors(websocket: WebSocket, device_id: int):
     while True:
         start_time = time.time()
         try:
-            logging.debug("Get data")
-            data = await get_data(conn, devices)
-            logging.debug("Send data")
+            data = await get_data(questdb_instance.get_db(), devices)
             await websocket.send_text(data)
-            logging.debug("Data sent")
         except websockets.exceptions.ConnectionClosed:
             logging.error("Connection closed")
             break
@@ -201,6 +198,6 @@ async def data_sensors(websocket: WebSocket, device_id: int):
         end_time = time.time()
         elapsed_time = end_time - start_time
         delay = 1 - elapsed_time
-        logging.debug("Delay: {}".format(delay))
+        logging.trace("Time to get_data and send: {}".format(elapsed_time))
         if delay > 0:
             await asyncio.sleep(delay)

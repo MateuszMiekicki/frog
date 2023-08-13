@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from sqlalchemy.orm import sessionmaker
 from fastapi import APIRouter, status, Request, HTTPException, Security
 import logging
+import psycopg2
 
 
 class Dialect(Enum):
@@ -85,3 +86,37 @@ class Database:
         finally:
             db.expunge_all()
             db.close()
+
+
+class RawPgDatabaseInstance:
+    def __init__(self, address: str, port: int, username: str, password: str, database: str):
+        self.address = address
+        self.port = port
+        self.username = username
+        self.password = password
+        self.database = database
+        self.connection = None
+
+    def __connect(self):
+        connection = psycopg2.connect(database=self.database,
+                                      host=self.address,
+                                      user=self.username,
+                                      password=self.password,
+                                      port=self.port)
+        return connection
+
+    def __is_connected(self):
+        try:
+            if self.connection is None:
+                return False
+            cur = self.connection.cursor()
+            cur.execute('SELECT 1')
+        except Exception as error:
+            logging.error(error)
+            return False
+        return True
+
+    def get_db(self):
+        if not self.__is_connected():
+            self.connection = self.__connect()
+        return self.connection

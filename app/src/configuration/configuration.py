@@ -3,7 +3,6 @@ import yaml
 import os
 import logging
 import argparse
-import psycopg2
 from configuration import logger, database
 from mailer import smtp
 import sys
@@ -213,12 +212,11 @@ def create_postgresql_instance():
 def create_questdb_instance():
     questdb_config = QuestDBConfiguration(
         read_config_from_file(configuration_files['databases']))
-    conn = psycopg2.connect(database=questdb_config.get_database_name(),
-                            host=questdb_config.get_hostname(),
-                            user=questdb_config.get_user_name(),
-                            password=questdb_config.get_password(),
-                            port=questdb_config.get_port())
-    return conn
+    return database.RawPgDatabaseInstance(questdb_config.get_hostname(),
+                                          questdb_config.get_port(),
+                                          questdb_config.get_user_name(),
+                                          questdb_config.get_password(),
+                                          questdb_config.get_database_name())
 
 
 def create_mailer_instance():
@@ -260,6 +258,7 @@ class ConfigForRequest():
 
     def get_context(self):
         return self.zmq_context
+
 
 def set_event_loop_policy():
     if sys.platform == 'win32':
