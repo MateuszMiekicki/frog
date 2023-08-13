@@ -1,4 +1,4 @@
-from entity import device as entity
+from entity import pet as entity
 from sqlalchemy.orm import Session
 from configuration.database import Database
 
@@ -39,9 +39,10 @@ class PetHabitat():
             db.add(new_pet_habitat)
             db.commit()
 
-    def get_pet_habitat_by_id(self, pet_habitat_id: int):
+    def get_pet_habitat_by_pet_id(self, pet_id: int):
         with self.database.get_db() as db:
-            return db.query(entity.PetHabitat).filter(entity.PetHabitat.id == pet_habitat_id).first()
+            return db.query(entity.PetHabitat).filter(
+                entity.PetHabitat.pet_id == pet_id).first()
 
     def delete_pet_habitat(self, pet_habitat_id: int):
         with self.database.get_db() as db:

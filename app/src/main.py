@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from configuration import logger, configuration
-from controller import register, login, device, data, sensor, alert, user
+from controller import register, login, device, data, sensor, alert, user, pet
 from security.authenticate import Authenticate
 from fastapi.security import HTTPBearer
 import repository.user as repository
@@ -17,6 +17,7 @@ app.include_router(data.router)
 app.include_router(sensor.router)
 app.include_router(alert.router)
 app.include_router(user.router)
+app.include_router(pet.router)
 
 
 configuration.set_event_loop_policy()
