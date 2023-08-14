@@ -1,20 +1,22 @@
 from OpenSSL import crypto, SSL
 
+
 def cert_gen(
-    emailAddress="emailAddress",
-    commonName="commonName",
-    countryName="NT",
-    localityName="localityName",
-    stateOrProvinceName="stateOrProvinceName",
-    organizationName="organizationName",
-    organizationUnitName="organizationUnitName",
-    serialNumber=0,
-    validityStartInSeconds=0,
-    validityEndInSeconds=10*365*24*60*60,
-    KEY_FILE = "private.key",
-    CERT_FILE="selfsigned.crt"):
-    #can look at generated file using openssl:
-    #openssl x509 -inform pem -in selfsigned.crt -noout -text
+        emailAddress="emailAddress",
+        commonName="commonName",
+        countryName="NT",
+        localityName="localityName",
+        stateOrProvinceName="stateOrProvinceName",
+        organizationName="organizationName",
+        organizationUnitName="organizationUnitName",
+        serialNumber=0,
+        validityStartInSeconds=0,
+        validityEndInSeconds=10*365*24*60*60,
+        DIR_WITH_PRIVATE_CONFIG="configuration/private/",
+        KEY_FILE="private.key",
+        CERT_FILE="selfsigned.crt"):
+    # can look at generated file using openssl:
+    # openssl x509 -inform pem -in selfsigned.crt -noout -text
     # create a key pair
     k = crypto.PKey()
     k.generate_key(crypto.TYPE_RSA, 4096)
@@ -33,9 +35,11 @@ def cert_gen(
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(k)
     cert.sign(k, 'sha512')
-    with open(CERT_FILE, "wt") as f:
-        f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8"))
-    with open(KEY_FILE, "wt") as f:
+    with open(DIR_WITH_PRIVATE_CONFIG+CERT_FILE, "wt") as f:
+        f.write(crypto.dump_certificate(
+            crypto.FILETYPE_PEM, cert).decode("utf-8"))
+    with open(DIR_WITH_PRIVATE_CONFIG+KEY_FILE, "wt") as f:
         f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode("utf-8"))
+
 
 cert_gen()
