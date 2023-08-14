@@ -8,8 +8,10 @@ import sys
 import zmq.asyncio
 import asyncio
 import logging
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 app = FastAPI()
+app.add_middleware(HTTPSRedirectMiddleware)
 app.include_router(register.router)
 app.include_router(login.router)
 app.include_router(device.router)
@@ -48,4 +50,4 @@ if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, lifespan="on", host=frog_config.get_hostname(), port=frog_config.get_port(),
                 log_level='info', log_config=None)
-    # ,ssl_keyfile='private/key.pem', ssl_certfile='private/cert.pem')
+    # ,ssl_keyfile='configuration/private/private.key', ssl_certfile='configuration/private/selfsigned.crt')
