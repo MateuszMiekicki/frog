@@ -48,6 +48,10 @@ if __name__ == '__main__':
     logging.info(f"Frog: {commit_hash} from {date} {time} {time_zone}")
 
     import uvicorn
-    uvicorn.run(app, lifespan="on", host=frog_config.get_hostname(), port=frog_config.get_port(),
-                log_level='info', log_config=None)
-    # ,ssl_keyfile='configuration/private/private.key', ssl_certfile='configuration/private/selfsigned.crt')
+    uvicorn.run(app, lifespan="on",
+                host=frog_config.get_hostname(),
+                port=frog_config.get_port(),
+                log_level='info',
+                log_config=None,
+                ssl_keyfile='configuration/private/private.key',
+                ssl_certfile='configuration/private/selfsigned.crt')
