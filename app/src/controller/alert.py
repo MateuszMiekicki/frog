@@ -7,6 +7,7 @@ from controller.data import authenticate_websocket
 from fastapi import WebSocket
 import zmq
 from sse_starlette.sse import EventSourceResponse
+import requester.requester as sender
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
@@ -37,6 +38,12 @@ async def serve_alert(request: Request, alert_id: int, token: str = Depends(oaut
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=f'The alert with the id {alert_id} is not owned by you.')
     alert_repository.serve_alert(alert_id)
+
+    requester = sender.Requester(request.app.state.zmq_config)
+    device_requester = sender.DeviceRequester(requester)
+    await device_requester.send_alert_served_indication_to_device(
+        device.mac_address, alert_id)
+
     return {'detail': f'alert with id {alert_id} served'}
 
 

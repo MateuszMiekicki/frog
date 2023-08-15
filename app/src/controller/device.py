@@ -26,25 +26,6 @@ def prepare_mac_address_to_add_to_database(mac_address):
     return __cast_to_lower_case(__trim_mac_address(mac_address))
 
 
-# async def send_request(client_id: str, request: str, zmq_config: configuration.ConfigForRequest):
-#     client = zmq_config.zmq_context.socket(zmq.DEALER)
-#     client.identity = client_id.encode()
-#     client.connect(zmq_config.get_receiver_address())
-#     poller = zmq.Poller()
-#     poller.register(client, zmq.POLLIN)
-#     client.send(request.encode())
-#     logging.debug(f"from {client_id} send request: {request}")
-#     if poller.poll(zmq_config.get_timeout()):
-#         response = await client.recv_string()
-#         client.close()
-#         logging.trace(f"response: {response}")
-#         return [status.HTTP_200_OK, response]
-
-#     logging.debug("No response from server - timeout")
-#     client.close()
-#     return [status.HTTP_408_REQUEST_TIMEOUT, '{"cause":"Connection timed out"}']
-
-
 def __prepare_information_about_devices_with_sensors(devices, sensors):
     if sensors is None:
         return {'id': devices.id, 'name': devices.name, 'mac_address': devices.mac_address, 'sensors': []}

@@ -9,12 +9,14 @@ import json
 class MessageType(Enum):
     REQUEST = "request"
     RESPONSE = "response"
+    REPORT = "report"
 
 
 class MessagePurpose(Enum):
     SET_CONFIGURATIONS = "set_configuration"
     GET_CONFIGURATIONS = "get_configuration"
     SET_SENSORS_CONFIGURATION = "SET_SENSORS_CONFIGURATION"
+    ALERT = "alert"
 
 
 class Message():
@@ -50,6 +52,13 @@ def build_request_set_sensor_configuration(payload: list[dict]):
         "sensors": payload
     }
     return Message(MessageType.REQUEST, MessagePurpose.SET_SENSORS_CONFIGURATION, payload)
+
+
+def build_alert_served_indication(alert_number: int):
+    payload = {
+        "alert_number": alert_number
+    }
+    return Message(MessageType.REPORT, MessagePurpose.ALERT, payload)
 
 
 def serialize(message: Message):
@@ -127,11 +136,6 @@ class DeviceRequester():
     def __init__(self, requester: Requester):
         self.requester = requester
 
-    # def send_set_configuration_request_to_device(self, mac_address: str, configuration: str):
-    #     message = MessageBuilder(
-    #         configuration).build_request_set_configurations()
-    #     requester.send(mac_address, message)
-
     async def send_get_configuration_request_to_device(self, mac_address: str):
         message = build_request_get_configurations()
         return await self.requester.send_request_and_receive_response(mac_address, message)
@@ -146,3 +150,7 @@ class DeviceRequester():
                           "min_value": float(sensor.min_value), "max_value": float(sensor.max_value)} for sensor in sensors]
         message = build_request_set_sensor_configuration(configuration)
         return await self.requester.send_request_and_receive_response(mac_address, message)
+
+    async def send_alert_served_indication_to_device(self, mac_address: str, alert_number: int):
+        message = build_alert_served_indication(alert_number)
+        return await self.requester.send_request(mac_address, message)
