@@ -16,7 +16,7 @@ class MessagePurpose(Enum):
     SET_CONFIGURATIONS = "set_configuration"
     GET_CONFIGURATIONS = "get_configuration"
     SET_SENSORS_CONFIGURATION = "SET_SENSORS_CONFIGURATION"
-    ALERT = "alert"
+    ALERT_INDICATION = "alert_indication"
 
 
 class Message():
@@ -58,7 +58,7 @@ def build_alert_served_indication(alert_number: int):
     payload = {
         "alert_number": alert_number
     }
-    return Message(MessageType.REPORT, MessagePurpose.ALERT, payload)
+    return Message(MessageType.REPORT, MessagePurpose.ALERT_INDICATION, payload)
 
 
 def serialize(message: Message):
