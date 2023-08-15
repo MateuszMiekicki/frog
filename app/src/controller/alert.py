@@ -18,29 +18,38 @@ def __extract_device_id_from_request(request: Request):
     return [device.id for device in request]
 
 
+def __extract_device_with_concrete_id(id: int, devices):
+    for device in devices:
+        if device.id == id:
+            return device
+    return None
+
+
 @router.put('/devices/alerts/{alert_id}', status_code=status.HTTP_200_OK)
 async def serve_alert(request: Request, alert_id: int, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
-    database = request.app.state.postgresql
-    device_repository = deviceRepository.Device(database)
     user_id = decoded_token.get('sub')
-    devices = device_repository.get_devices_by_user_id(user_id)
-    alert_repository = alertRepository.Alert(database)
-    devices_id = __extract_device_id_from_request(devices)
-    if len(devices_id) == 0:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'The user with the id {user_id} has no devices.')
+
+    alert_repository = alertRepository.Alert(request.app.state.postgresql)
     alert = alert_repository.get_alert_by_id(alert_id)
     if alert is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f'The alert with the id {alert_id} was not found.')
-    if alert.device_id != devices_id[0]:
+
+    devices = deviceRepository.Device(
+        request.app.state.postgresql).get_devices_by_user_id(user_id)
+    device_id = alert.device_id if alert.device_id in __extract_device_id_from_request(
+        devices) else None
+    if device_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=f'The alert with the id {alert_id} is not owned by you.')
+
     alert_repository.serve_alert(alert_id)
 
     requester = sender.Requester(request.app.state.zmq_config)
     device_requester = sender.DeviceRequester(requester)
+
+    device = __extract_device_with_concrete_id(device_id, devices)
     await device_requester.send_alert_served_indication_to_device(
         device.mac_address, alert_id)
 
