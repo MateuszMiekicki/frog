@@ -51,7 +51,7 @@ async def serve_alert(request: Request, alert_id: int, token: str = Depends(oaut
 
     device = __extract_device_with_concrete_id(device_id, devices)
     await device_requester.send_alert_served_indication_to_device(
-        device.mac_address, alert_id)
+        device.mac_address, alert.alert_number)
 
     return {'detail': f'alert with id {alert_id} served'}
 
