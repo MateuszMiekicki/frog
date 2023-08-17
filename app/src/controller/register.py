@@ -28,7 +28,7 @@ def __send_confirmation_code(mailer, user_email):
 
 
 @router.post('/register', status_code=status.HTTP_201_CREATED)
-async def login(request: Request, user: User):
+async def register(request: Request, user: User):
     database = request.app.state.postgresql
     user_repository = user_repo.User(database)
     if not user_repository.is_user_exist(user.email):
