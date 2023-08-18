@@ -204,7 +204,7 @@ async def data_sensors(websocket: WebSocket, device_id: int):
             await asyncio.sleep(delay)
 
 
-@router.get('/device/{device_id}/sensor/data')
+@router.get('/device/{device_id}/sensor/data/stream')
 async def data_sensor_stream(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
     decoded_token = request.app.state.authenticate.decode_token(token)
 
