@@ -139,13 +139,13 @@ async def device_alerts_notifier(websocket: WebSocket):
 
 @router.get('/devices/notifier/alerts')
 async def message_stream(request: Request, token: str = Depends(oauth2_scheme)):
-    decode_token = request.app.state.authenticate.decode_token(token)
+    decoded_token = request.app.state.authenticate.decode_token(token)
 
     devices = deviceRepository.Device(
-        request.app.state.postgresql).get_devices_by_user_id(decode_token.get('sub'))
+        request.app.state.postgresql).get_devices_by_user_id(decoded_token.get('sub'))
     if len(devices) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'The user with the id {decode_token.get("sub")} has no devices.')
+                            detail=f'The user with the id {decoded_token.get("sub")} has no devices.')
 
     client = request.app.state.zmq_config.zmq_context.socket(zmq.SUB)
     client.connect("tcp://localhost:5574")

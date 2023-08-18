@@ -12,6 +12,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from security.authenticate import Authenticate
 from fastapi import APIRouter, status, Request, HTTPException, Depends
 import repository.device as repository
+from sse_starlette.sse import EventSourceResponse
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
@@ -201,3 +202,33 @@ async def data_sensors(websocket: WebSocket, device_id: int):
         logging.trace("Time to get_data and send: {}".format(elapsed_time))
         if delay > 0:
             await asyncio.sleep(delay)
+
+
+@router.get('/device/{device_id}/sensor/data')
+async def data_sensor_stream(request: Request, device_id: int, token: str = Depends(oauth2_scheme)):
+    decoded_token = request.app.state.authenticate.decode_token(token)
+
+    database = request.app.state.postgresql
+    device_repository = repository.Device(database)
+    user_id = decoded_token.get('sub')
+    device = preprocessing_parameters_with_device_id(
+        [device_id], device_repository.get_devices_by_user_id(user_id))
+    if device is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'The device with the id {device_id} was not found.')
+
+    async def event_generator():
+        questdb_instance = request.app.state.questdb
+
+        while True:
+            if await request.is_disconnected():
+                client.close()
+                break
+            start = time.time()
+            data = await get_data(questdb_instance.get_db(), device)
+            stop = time.time()
+            if stop - start < 1:
+                await asyncio.sleep(1 - (stop - start))
+            yield data
+
+    return EventSourceResponse(event_generator())
