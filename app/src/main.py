@@ -11,7 +11,7 @@ import logging
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 app = FastAPI()
-app.add_middleware(HTTPSRedirectMiddleware)
+# app.add_middleware(HTTPSRedirectMiddleware)
 app.include_router(register.router)
 app.include_router(login.router)
 app.include_router(device.router)
@@ -52,6 +52,6 @@ if __name__ == '__main__':
                 host=frog_config.get_hostname(),
                 port=frog_config.get_port(),
                 log_level='info',
-                log_config=None,
-                ssl_keyfile='configuration/private/private.key',
-                ssl_certfile='configuration/private/selfsigned.crt')
+                log_config=None)
+                # ssl_keyfile='configuration/private/private.key',
+                # ssl_certfile='configuration/private/selfsigned.crt')
