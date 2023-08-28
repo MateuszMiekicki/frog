@@ -13,15 +13,20 @@ from security.authenticate import Authenticate
 from fastapi import APIRouter, status, Request, HTTPException, Depends
 import repository.device as repository
 from sse_starlette.sse import EventSourceResponse
+from dateutil import tz
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 
-def prepare_message_for_client(rows):
+def prepare_message_for_client(rows, time_zone=tz.tzlocal(), remove_time_zone=True):
     result = {}
     previous_values = {}
     for item in rows:
         timestamp, mac_address, pin_number, value = item
+        timestamp = timestamp.replace(tzinfo=tz.tzutc()).astimezone(
+            time_zone)
+        if remove_time_zone:
+            timestamp = timestamp.replace(tzinfo=None)
         timestamp_str = timestamp.isoformat()
         if str(mac_address) not in result:
             result[str(mac_address)] = {}
