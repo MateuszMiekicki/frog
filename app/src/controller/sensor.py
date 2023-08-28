@@ -21,7 +21,7 @@ async def add_sensor(request: Request, device_id: int, sensor: Sensor, token: st
 
     repo = sensor_repository.Sensor(request.app.state.postgresql)
     if repo.get_sensor_assigned_to_device_pin_number(device_id, sensor.pin_number) is not None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail=f'The pin {sensor.pin_number} is already associated with device id {device_id}.')
     repo.add_sensor(device_id, sensor.name, sensor.pin_number,
                     sensor.type, sensor.min_value, sensor.max_value)
@@ -40,7 +40,12 @@ async def get_sensors(request: Request, device_id: int, token: str = Depends(oau
     sensor_repo = sensor_repository.Sensor(request.app.state.postgresql)
     sensors = sensor_repo.get_sensors_assigned_to_device(device_id)
 
-    return [{'id': sensor.id, 'name': sensor.name, 'pin_number': sensor.pin_number, 'type': sensor.type, 'min_value': sensor.min_value, 'max_value': sensor.max_value} for sensor in sensors]
+    return [{'id': sensor.id,
+             'name': sensor.name,
+             'pin_number': sensor.pin_number,
+             'type': sensor.type,
+             'min_value': sensor.min_value,
+             'max_value': sensor.max_value} for sensor in sensors]
 
 
 @router.delete('/device/{device_id}/sensor/{sensor_id}', status_code=status.HTTP_200_OK)
