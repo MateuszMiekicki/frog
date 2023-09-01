@@ -23,6 +23,7 @@ def prepare_message_for_client(rows, time_zone=tz.tzlocal(), remove_time_zone=Tr
     previous_values = {}
     for item in rows:
         timestamp, mac_address, pin_number, value = item
+        timestamp = datetime.fromisoformat(timestamp)
         timestamp = timestamp.replace(tzinfo=tz.tzutc()).astimezone(
             time_zone)
         if remove_time_zone:
