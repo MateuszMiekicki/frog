@@ -21,10 +21,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 def prepare_message_for_client(rows, time_zone=tz.tzlocal(), remove_time_zone=True):
     result = {}
     previous_values = {}
+    print("timezone: {}".format(time_zone))
     for item in rows:
         mac_address, pin_number, value, timestamp = item
-        logging.trace("timestamp: {}, mac_address: {}, pin_number: {}, value: {}".format(
-            timestamp, mac_address, pin_number, value))
         timestamp = timestamp.replace(tzinfo=tz.tzutc()).astimezone(
             time_zone)
         if remove_time_zone:
@@ -68,7 +67,6 @@ async def get_data(database, devices):
     cursor = database.cursor()
     cursor.execute(prepare_query(devices))
     rows = cursor.fetchmany(size=50)
-    logging.trace("Rows: {}".format(rows))
     return json.dumps(prepare_message_for_client(rows))
 
 
