@@ -22,8 +22,9 @@ def prepare_message_for_client(rows, time_zone=tz.tzlocal(), remove_time_zone=Tr
     result = {}
     previous_values = {}
     print("timezone: {}".format(time_zone))
+    logging.trace("rows: {}".format(rows))
     for item in rows:
-        mac_address, pin_number, value, timestamp = item
+        timestamp, mac_address, pin_number, value = item
         timestamp = timestamp.replace(tzinfo=tz.tzutc()).astimezone(
             time_zone)
         if remove_time_zone:
